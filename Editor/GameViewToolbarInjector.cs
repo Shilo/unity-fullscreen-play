@@ -268,6 +268,39 @@ namespace Shilo.FullscreenPlay.Editor
         }
 
         // ================================================================
+        //  Cleanup (called before assembly reload / package disable)
+        // ================================================================
+
+        /// <summary>
+        /// Removes all injected overlay elements from every GameView's
+        /// visual tree. Called by <see cref="FullscreenPlayController"/>
+        /// before assembly reload to prevent stale delegates.
+        /// </summary>
+        internal static void RemoveAllOverlays()
+        {
+            try
+            {
+                if (s_GameViewType == null) return;
+
+                var views = Resources.FindObjectsOfTypeAll(s_GameViewType);
+                foreach (var obj in views)
+                {
+                    try
+                    {
+                        var window = obj as EditorWindow;
+                        if (window == null) continue;
+
+                        var root = window.rootVisualElement;
+                        var overlay = root?.Q(OverlayName);
+                        overlay?.RemoveFromHierarchy();
+                    }
+                    catch { /* silent no-op */ }
+                }
+            }
+            catch { /* silent no-op */ }
+        }
+
+        // ================================================================
         //  Drawing
         // ================================================================
 

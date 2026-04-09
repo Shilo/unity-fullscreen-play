@@ -13,14 +13,38 @@ namespace Shilo.FullscreenPlay.Editor
     [InitializeOnLoad]
     internal static class FullscreenPlayController
     {
+        private static FieldInfo s_GlobalEventHandlerField;
+
         static FullscreenPlayController()
         {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             HookGlobalEventHandler();
 
+            // Clean up all injected state before the next domain reload
+            // (assembly unload, package disable, script recompilation).
+            // This prevents stale delegates and visual-tree elements from
+            // persisting into a domain that no longer contains our assembly.
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+
             // Safety: clean up stale fullscreen state after domain reload
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
                 FullscreenGameView.Cleanup();
+        }
+
+        // ---- Cleanup ----
+
+        private static void OnBeforeAssemblyReload()
+        {
+            // Remove our global event handler hook so the delegate doesn't
+            // reference an unloaded assembly.
+            UnhookGlobalEventHandler();
+
+            // Close any open fullscreen window.
+            if (FullscreenGameView.IsFullscreen)
+                FullscreenGameView.ExitFullscreen();
+
+            // Remove injected toolbar overlays from GameView visual trees.
+            GameViewToolbarInjector.RemoveAllOverlays();
         }
 
         // ---- Play mode integration ----
@@ -106,20 +130,38 @@ namespace Shilo.FullscreenPlay.Editor
         {
             try
             {
-                var field = typeof(EditorApplication).GetField(
+                s_GlobalEventHandlerField = typeof(EditorApplication).GetField(
                     "globalEventHandler",
                     BindingFlags.Static | BindingFlags.NonPublic);
 
-                if (field == null) return;
+                if (s_GlobalEventHandlerField == null) return;
 
-                var existing = (EditorApplication.CallbackFunction)field.GetValue(null);
+                var existing = (EditorApplication.CallbackFunction)
+                    s_GlobalEventHandlerField.GetValue(null);
                 existing += OnGlobalEvent;
-                field.SetValue(null, existing);
+                s_GlobalEventHandlerField.SetValue(null, existing);
             }
             catch (Exception e)
             {
                 Debug.LogWarning(
                     $"[Fullscreen Play] Could not hook global event handler: {e.Message}");
+            }
+        }
+
+        private static void UnhookGlobalEventHandler()
+        {
+            try
+            {
+                if (s_GlobalEventHandlerField == null) return;
+
+                var existing = (EditorApplication.CallbackFunction)
+                    s_GlobalEventHandlerField.GetValue(null);
+                existing -= OnGlobalEvent;
+                s_GlobalEventHandlerField.SetValue(null, existing);
+            }
+            catch
+            {
+                // Silent — we're shutting down anyway.
             }
         }
 
