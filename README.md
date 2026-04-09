@@ -68,7 +68,7 @@ Open **Edit > Preferences > Fullscreen Play** to configure:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Play Fullscreen | Off | Auto-fullscreen on entering Play mode |
-| Fullscreen Mode | Fullscreen Windowed | Borderless window (exclusive fullscreen planned) |
+| Fullscreen Mode | Fullscreen Windowed | Currently locked; exclusive fullscreen planned |
 | Enable F11 Hotkey | On | Allow F11 to toggle fullscreen |
 | Show Toast | On | Show exit instructions overlay |
 | Toast Duration | 3s | How long the toast is visible |
