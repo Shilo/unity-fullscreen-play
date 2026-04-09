@@ -1,40 +1,44 @@
 ## Unity Fullscreen Play
 
-Unity Editor package that adds true fullscreen Play mode. Creates a borderless popup GameView window covering the entire screen without modifying the user's editor layout. Editor-only with zero runtime footprint, installed via UPM Git URL.
+Editor-only package adding true fullscreen Play mode via a borderless popup GameView. Zero runtime footprint.
 
 ## Architecture
 
-Creates a second GameView instance via ShowPopup() (public API) rather than repositioning the existing one. Original Game tab is never touched — cleanup is just closing the popup.
+Second GameView via ShowPopup(), original tab untouched. Closing the popup exits fullscreen.
 
-On Windows, Win32 P/Invoke (SetWindowPos, SetWindowLong) strips window chrome and covers the taskbar. Uses HWND_TOP (not HWND_TOPMOST) so alt-tab works normally.
+Win32: Editor/FullscreenGameView.cs
+P/Invoke strips chrome, covers taskbar with HWND_TOP (not HWND_TOPMOST, so alt-tab works).
 
-The toolbar dropdown overlays an opaque IMGUIContainer on top of Unity's built-in EnumPopup dropdown since the internal enum can't be extended. Silently disables itself if internals change.
+Toolbar dropdown: Editor/GameViewToolbarInjector.cs
+IMGUIContainer overlay on Unity's EnumPopup (enum not extensible). Self-disables if internals change.
 
-F11 uses both the [Shortcut] API (discoverability) and globalEventHandler reflection (reliability during play). Escape uses only globalEventHandler to avoid conflicting with games.
+Hotkeys: Editor/FullscreenPlayController.cs
+F11 via [Shortcut] API + globalEventHandler reflection. Escape via globalEventHandler only (avoids game conflicts).
 
-Domain reload safety: beforeAssemblyReload unhooks delegates, closes popups, removes overlays. [InitializeOnLoad] re-initializes everything in the new domain.
+Domain reload: beforeAssemblyReload cleans up delegates/popups/overlays. [InitializeOnLoad] re-initializes.
 
-Settings are stored in EditorPrefs with the FullscreenPlay. prefix (per-user, not per-project).
+Settings: Editor/FullscreenPlaySettings.cs
+EditorPrefs with FullscreenPlay. prefix, per-user.
 
-Localization is file-based i18n via JSON files in Editor/Locales/, extensible by adding new locale files.
+Toast: Editor/FullscreenToast.cs
+Localization: Editor/I18n.cs, Editor/Locales/
 
 ## Further Reading
 
-Full technical deep-dive: DOCUMENTATION.md
-User-facing docs and installation: README.md
-Version history: CHANGELOG.md
-Release automation: .github/workflows/release.yml
+Technical deep-dive: DOCUMENTATION.md
+User docs and install: README.md
+Changelog: CHANGELOG.md
+Release workflow: .github/workflows/release.yml
 UPM manifest: package.json
-Locale strings: Editor/Locales/en.json, Editor/Locales/de.json
 
 ## Constraints
 
-All code is editor-only (includePlatforms: Editor in asmdef). No Runtime/ folder.
+Editor-only (includePlatforms: Editor in asmdef). No Runtime/ folder.
 
-Reflection is used to access internal GameView type, showToolbar, targetDisplay, selectedSizeIndex, and globalEventHandler. Each access is wrapped in try/catch for forward compatibility.
+Reflection on internal GameView, showToolbar, targetDisplay, selectedSizeIndex, globalEventHandler. Each in try/catch.
 
-ExclusiveFullscreen mode exists as an enum value but is deliberately unimplemented (risk of display resolution corruption on editor crash).
+ExclusiveFullscreen enum exists but unimplemented (resolution corruption risk on crash).
 
-Multi-monitor support is not yet implemented — targets primary monitor only.
+Primary monitor only. Multi-monitor not yet supported.
 
-Platform-specific code is behind UNITY_EDITOR_WIN preprocessor directive.
+Platform code behind UNITY_EDITOR_WIN.
