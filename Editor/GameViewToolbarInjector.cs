@@ -72,10 +72,22 @@ namespace Shilo.FullscreenPlay.Editor
         private static readonly PropertyInfo s_ShowToolbarProp; // GameView.showToolbar
         private static readonly bool s_Ready;
 
-        // ----- cached labels -----
+        // ----- localized labels (resolved lazily) -----
 
-        private static readonly string[] s_Labels =
-            { "Play Focused", "Play Maximized", "Play Unfocused" };
+        private static string[] s_Labels;
+        private static string s_PlayFullscreenLabel;
+
+        private static void EnsureLabels()
+        {
+            if (s_Labels != null) return;
+            s_Labels = new[]
+            {
+                L10n.Tr("play_focused"),
+                L10n.Tr("play_maximized"),
+                L10n.Tr("play_unfocused")
+            };
+            s_PlayFullscreenLabel = L10n.Tr("play_fullscreen");
+        }
 
         // ================================================================
         //  Initialisation
@@ -332,12 +344,14 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static void DrawDropdown(EditorWindow gameView)
         {
+            EnsureLabels();
+
             int behavior        = GetBehavior(gameView);
             bool playFullscreen = FullscreenPlaySettings.PlayFullscreen;
 
             string label;
             if (playFullscreen)
-                label = "Play Fullscreen";
+                label = s_PlayFullscreenLabel;
             else if (behavior >= 0 && behavior < s_Labels.Length)
                 label = s_Labels[behavior];
             else
@@ -381,7 +395,7 @@ namespace Shilo.FullscreenPlay.Editor
             menu.AddSeparator("");
 
             menu.AddItem(
-                new GUIContent("Play Fullscreen"),
+                new GUIContent(s_PlayFullscreenLabel),
                 playFullscreen,
                 () =>
                 {

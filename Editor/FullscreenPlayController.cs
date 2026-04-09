@@ -54,10 +54,7 @@ namespace Shilo.FullscreenPlay.Editor
             switch (state)
             {
                 case PlayModeStateChange.EnteredPlayMode:
-                    bool shouldFullscreen = FullscreenPlaySettings.PlayFullscreen || s_OneShotFullscreen;
-                    s_OneShotFullscreen = false;
-
-                    if (shouldFullscreen)
+                    if (FullscreenPlaySettings.PlayFullscreen)
                     {
                         // Delay one frame so the GameView is fully initialised
                         EditorApplication.delayCall += () =>
@@ -88,26 +85,18 @@ namespace Shilo.FullscreenPlay.Editor
         private const string EditEnterNow   = "Edit/Fullscreen Play/Enter Fullscreen Now";
         private const string EditSettings   = "Edit/Fullscreen Play/Settings...";
 
-        /// <summary>
-        /// One-shot flag: enter fullscreen on the next EnteredPlayMode without
-        /// permanently changing the PlayFullscreen preference.
-        /// </summary>
-        private static bool s_OneShotFullscreen;
-
         // --- Tools menu ---
 
         [MenuItem(ToolsToggle, false, 100)]
         private static void ToolsToggleFullscreen()
         {
-            if (EditorApplication.isPlaying)
-            {
-                FullscreenGameView.ToggleFullscreen();
-            }
-            else
-            {
-                s_OneShotFullscreen = true;
-                EditorApplication.isPlaying = true;
-            }
+            FullscreenGameView.ToggleFullscreen();
+        }
+
+        [MenuItem(ToolsToggle, true)]
+        private static bool ValidateToolsToggleFullscreen()
+        {
+            return EditorApplication.isPlaying;
         }
 
         [MenuItem(ToolsAuto, false, 101)]
@@ -147,15 +136,13 @@ namespace Shilo.FullscreenPlay.Editor
         [MenuItem(EditEnterNow, false, 161)]
         private static void EditEnterFullscreenNow()
         {
-            if (EditorApplication.isPlaying)
-            {
-                FullscreenGameView.ToggleFullscreen();
-            }
-            else
-            {
-                s_OneShotFullscreen = true;
-                EditorApplication.isPlaying = true;
-            }
+            FullscreenGameView.ToggleFullscreen();
+        }
+
+        [MenuItem(EditEnterNow, true)]
+        private static bool ValidateEditEnterFullscreenNow()
+        {
+            return EditorApplication.isPlaying;
         }
 
         [MenuItem(EditSettings, false, 200)]
