@@ -59,37 +59,21 @@ namespace Shilo.FullscreenPlay.Editor
             // ShowPopup creates a borderless, chromeless window
             s_FullscreenWindow.ShowPopup();
             s_FullscreenWindow.position = s_FullscreenRect;
+            s_FullscreenWindow.Focus();
 
 #if UNITY_EDITOR_WIN
+            // Apply Win32 fullscreen styling SYNCHRONOUSLY — right after
+            // ShowPopup + Focus, the window is the foreground window on this
+            // same frame. Applying it here (not via delayCall) prevents the
+            // one-frame flash where the taskbar and window gutters are visible.
             s_FullscreenWindow.titleContent = new GUIContent("FullscreenPlayPopup");
+            MakeWindowFullscreen(s_FullscreenRect);
 #endif
 
             // Copy target display and resolution settings from the existing GameView
             CopyGameViewSettings(s_FullscreenWindow);
 
-#if UNITY_EDITOR_WIN
-            // Apply Win32 fullscreen styling immediately on the next frame.
-            // Then show toast on the frame after that (so it layers on top).
-            EditorApplication.delayCall += () =>
-            {
-                if (s_FullscreenWindow == null) return;
-                s_FullscreenWindow.Focus();
-                MakeWindowFullscreen(s_FullscreenRect);
-
-                // Toast on the next frame after fullscreen is applied
-                if (FullscreenPlaySettings.ShowToast)
-                {
-                    EditorApplication.delayCall += () =>
-                    {
-                        if (!IsFullscreen) return;
-                        FullscreenToast.Show(s_FullscreenRect);
-                    };
-                }
-            };
-#else
-            s_FullscreenWindow.Focus();
-
-            // Show toast notification
+            // Show toast notification (delayed one frame so it layers on top)
             if (FullscreenPlaySettings.ShowToast)
             {
                 EditorApplication.delayCall += () =>
@@ -98,7 +82,6 @@ namespace Shilo.FullscreenPlay.Editor
                     FullscreenToast.Show(s_FullscreenRect);
                 };
             }
-#endif
         }
 
         public static void ExitFullscreen()

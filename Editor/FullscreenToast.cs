@@ -72,8 +72,6 @@ namespace Shilo.FullscreenPlay.Editor
 #endif
 
             EditorApplication.update += s_Instance.Tick;
-
-            Debug.Log($"[Fullscreen Play] Toast shown. Duration={s_Instance._duration}s, StartTime={s_Instance._startTime:F2}");
         }
 
 #if UNITY_EDITOR_WIN
@@ -90,8 +88,6 @@ namespace Shilo.FullscreenPlay.Editor
         {
             if (s_Instance != null)
             {
-                double elapsed = EditorApplication.timeSinceStartup - s_Instance._startTime;
-                Debug.Log($"[Fullscreen Play] Toast hidden after {elapsed:F2}s (duration was {s_Instance._duration}s). Stack: {System.Environment.StackTrace}");
                 EditorApplication.update -= s_Instance.Tick;
                 s_Instance.Close();
                 s_Instance = null;
