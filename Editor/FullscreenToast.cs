@@ -5,8 +5,8 @@ namespace Shilo.FullscreenPlay.Editor
 {
     /// <summary>
     /// Material Design 3 styled toast notification showing keycap hints for
-    /// exiting fullscreen. Flat dark theme with rounded corners and
-    /// anti-aliased keycap badges. Non-interactive (click-through).
+    /// exiting fullscreen. Flat dark theme with anti-aliased rounded keycap
+    /// badges. Non-interactive (click-through).
     /// </summary>
     internal class FullscreenToast : EditorWindow
     {
@@ -36,8 +36,7 @@ namespace Shilo.FullscreenPlay.Editor
         private const float KeySpacing = 6f;
         private const float TextKeyGap = 12f;
 
-        // Corner radii
-        private const int CornerRadius = 12;
+        // Keycap corner radius
         private const int KeyRadius = 6;
 
         // MD3 Dark theme palette
@@ -81,7 +80,7 @@ namespace Shilo.FullscreenPlay.Editor
                     if (hwnd != System.IntPtr.Zero)
                     {
                         FullscreenGameView.BringWindowToTop(hwnd);
-                        ApplyRoundedCorners(hwnd);
+                        MakeClickThrough(hwnd);
                     }
                 }
                 catch { /* silent */ }
@@ -95,33 +94,31 @@ namespace Shilo.FullscreenPlay.Editor
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         private static extern System.IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        private static extern System.IntPtr CreateRoundRectRgn(
-            int x1, int y1, int x2, int y2, int cx, int cy);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int GetWindowLong(System.IntPtr hWnd, int nIndex);
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern int SetWindowRgn(
-            System.IntPtr hWnd, System.IntPtr hRgn, bool bRedraw);
+        private static extern int SetWindowLong(System.IntPtr hWnd, int nIndex, int dwNewLong);
 
-        [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-        private static extern bool DeleteObject(System.IntPtr hObject);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetLayeredWindowAttributes(
+            System.IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
 
         private static System.IntPtr FindWindowByTitle(string title)
         {
             return FindWindow(null, title);
         }
 
-        private static void ApplyRoundedCorners(System.IntPtr hwnd)
+        private static void MakeClickThrough(System.IntPtr hwnd)
         {
-            int w = (int)ToastWidth;
-            int h = (int)ToastHeight;
-            int d = CornerRadius * 2; // ellipse diameter for CreateRoundRectRgn
-            var rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, d, d);
-            if (rgn != System.IntPtr.Zero)
-            {
-                if (SetWindowRgn(hwnd, rgn, true) == 0)
-                    DeleteObject(rgn); // only delete on failure; system owns it on success
-            }
+            const int GWL_EXSTYLE = -20;
+            const int WS_EX_LAYERED = 0x80000;
+            const int WS_EX_TRANSPARENT = 0x20;
+            const uint LWA_ALPHA = 0x2;
+
+            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT);
+            SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA); // fully visible, click-through
         }
 #endif
 
@@ -224,7 +221,7 @@ namespace Shilo.FullscreenPlay.Editor
 
             var fullRect = new Rect(0, 0, position.width, position.height);
 
-            // Background — flat dark surface, region clips to rounded shape
+            // Background — flat dark surface
             EditorGUI.DrawRect(fullRect,
                 new Color(BgColor.r, BgColor.g, BgColor.b, BgColor.a * alpha));
 

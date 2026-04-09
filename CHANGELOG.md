@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Tools > Fullscreen Play menu (standard third-party plugin location) with Auto-Fullscreen on Play, Toggle Fullscreen (Ctrl+Shift+F11), and Settings
 - Edit > Fullscreen Play menu now mirrors Tools menu exactly for discoverability
-- Material Design 3 styled toast with flat dark theme, rounded corners (Win32 window region), and anti-aliased keycap badges
+- Material Design 3 styled toast with flat dark theme and anti-aliased rounded keycap badges
 - Internationalization (i18n) — all UI strings localized, English and German included, extensible via JSON files in `Editor/Locales/`
 - Settings panel strings (labels, tooltips, help text) are now fully localized
 

@@ -259,7 +259,7 @@ The `FullscreenPlaySettingsProvider` class implements a `SettingsProvider` regis
 A small borderless popup (`EditorWindow` via `ShowPopup()`) that displays "Press Esc or F11 to exit fullscreen" at the top-center of the screen. It fades out after the configured duration.
 
 **Rendering (Material Design 3 flat dark theme):**
-- Dark surface background (`#1E1E24` at 95% opacity), clipped to rounded corners on Windows via Win32 `CreateRoundRectRgn` + `SetWindowRgn` (12px corner radius)
+- Dark surface background (`#1E1E24` at 95% opacity)
 - "Exit fullscreen" label followed by flat rounded keycap badges (`[F11]` `[Esc]`), horizontally centered
 - Keycaps: slightly elevated surface color, 6px rounded corners via SDF-generated anti-aliased 9-slice textures, no border or shadow
 - Fade: linear alpha reduction from 65% to 100% of duration
