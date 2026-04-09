@@ -13,6 +13,7 @@ namespace Shilo.FullscreenPlay.Editor
     {
         private const string PackageName = "com.shilo.fullscreen-play";
         private const string GitUrl = "https://github.com/Shilo/unity-fullscreen-play.git";
+        private const string DialogTitle = "Fullscreen Play";
 
         private static ListRequest s_ListRequest;
         private static AddRequest s_AddRequest;
@@ -22,7 +23,7 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         public static void CheckForUpdate()
         {
-            EditorUtility.DisplayProgressBar("Fullscreen Play", "Checking for updates...", 0.2f);
+            EditorUtility.DisplayProgressBar(DialogTitle, I18n.Tr("update_checking"), 0.2f);
             s_ListRequest = Client.List(offlineMode: false);
             EditorApplication.update += OnListRequestComplete;
         }
@@ -36,8 +37,8 @@ namespace Shilo.FullscreenPlay.Editor
             {
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog(
-                    "Fullscreen Play",
-                    $"Failed to check for updates:\n{s_ListRequest.Error.message}",
+                    DialogTitle,
+                    string.Format(I18n.Tr("update_check_failed"), s_ListRequest.Error.message),
                     "OK");
                 return;
             }
@@ -56,13 +57,13 @@ namespace Shilo.FullscreenPlay.Editor
             {
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog(
-                    "Fullscreen Play",
-                    "Could not find the installed package. It may have been embedded or installed manually.",
+                    DialogTitle,
+                    I18n.Tr("update_not_found"),
                     "OK");
                 return;
             }
 
-            EditorUtility.DisplayProgressBar("Fullscreen Play", "Fetching latest version...", 0.5f);
+            EditorUtility.DisplayProgressBar(DialogTitle, I18n.Tr("update_fetching"), 0.5f);
             s_AddRequest = Client.Add(GitUrl);
             EditorApplication.update += OnAddRequestComplete;
         }
@@ -76,16 +77,16 @@ namespace Shilo.FullscreenPlay.Editor
             if (s_AddRequest.Status == StatusCode.Failure)
             {
                 EditorUtility.DisplayDialog(
-                    "Fullscreen Play",
-                    $"Update failed:\n{s_AddRequest.Error.message}",
+                    DialogTitle,
+                    string.Format(I18n.Tr("update_failed"), s_AddRequest.Error.message),
                     "OK");
                 return;
             }
 
             var newVersion = s_AddRequest.Result.version;
             EditorUtility.DisplayDialog(
-                "Fullscreen Play",
-                $"Package updated to version {newVersion}.",
+                DialogTitle,
+                string.Format(I18n.Tr("update_success"), newVersion),
                 "OK");
         }
     }

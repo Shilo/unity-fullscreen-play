@@ -20,5 +20,12 @@
   "settings_show_on_refocus": "Bei Reaktivierung anzeigen",
   "settings_show_on_refocus_tooltip": "Toast erneut anzeigen, wenn das Vollbildfenster den Fokus zur\u00fcckgewinnt (z.\u00a0B. nach Alt+Tab)",
   "settings_toast_duration": "Toast-Dauer (s)",
-  "settings_toast_duration_tooltip": "Wie lange die Toast-Benachrichtigung sichtbar ist"
+  "settings_toast_duration_tooltip": "Wie lange die Toast-Benachrichtigung sichtbar ist",
+
+  "update_checking": "Suche nach Updates\u2026",
+  "update_fetching": "Neueste Version wird abgerufen\u2026",
+  "update_check_failed": "Update-Pr\u00fcfung fehlgeschlagen:\n{0}",
+  "update_not_found": "Installiertes Paket nicht gefunden. Es wurde m\u00f6glicherweise eingebettet oder manuell installiert.",
+  "update_failed": "Update fehlgeschlagen:\n{0}",
+  "update_success": "Paket auf Version {0} aktualisiert."
 }

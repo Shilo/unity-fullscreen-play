@@ -20,5 +20,12 @@
   "settings_show_on_refocus": "Show on Refocus",
   "settings_show_on_refocus_tooltip": "Re-show the toast when the fullscreen window regains focus (e.g. after alt-tab)",
   "settings_toast_duration": "Toast Duration (s)",
-  "settings_toast_duration_tooltip": "How long the toast notification is visible"
+  "settings_toast_duration_tooltip": "How long the toast notification is visible",
+
+  "update_checking": "Checking for updates...",
+  "update_fetching": "Fetching latest version...",
+  "update_check_failed": "Failed to check for updates:\n{0}",
+  "update_not_found": "Could not find the installed package. It may have been embedded or installed manually.",
+  "update_failed": "Update failed:\n{0}",
+  "update_success": "Package updated to version {0}."
 }
