@@ -116,21 +116,21 @@ namespace Shilo.FullscreenPlay.Editor
             return EditorApplication.isPlaying;
         }
 
-        [MenuItem(ToolsSettings, false, 200)]
-        private static void ToolsOpenSettings()
-        {
-            SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
-        }
-
-        [MenuItem(ToolsUpdate, false, 201)]
+        [MenuItem(ToolsUpdate, false, 200)]
         private static void ToolsCheckForUpdate()
         {
             PackageUpdater.CheckForUpdate();
         }
 
+        [MenuItem(ToolsSettings, false, 201)]
+        private static void ToolsOpenSettings()
+        {
+            SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
+        }
+
         // --- Edit menu (mirrors Tools/ for discoverability) ---
 
-        [MenuItem(EditAuto, false, 251)]
+        [MenuItem(EditAuto, false, 10100)]
         private static void EditToggleAuto()
         {
             FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
@@ -143,7 +143,7 @@ namespace Shilo.FullscreenPlay.Editor
             return true;
         }
 
-        [MenuItem(EditToggle, false, 252)]
+        [MenuItem(EditToggle, false, 10101)]
         private static void EditToggleFullscreen()
         {
             if (!EditorApplication.isPlaying) return;
@@ -156,16 +156,16 @@ namespace Shilo.FullscreenPlay.Editor
             return EditorApplication.isPlaying;
         }
 
-        [MenuItem(EditSettings, false, 260)]
-        private static void EditOpenSettings()
-        {
-            SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
-        }
-
-        [MenuItem(EditUpdate, false, 261)]
+        [MenuItem(EditUpdate, false, 10200)]
         private static void EditCheckForUpdate()
         {
             PackageUpdater.CheckForUpdate();
+        }
+
+        [MenuItem(EditSettings, false, 10201)]
+        private static void EditOpenSettings()
+        {
+            SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
         }
 
         // ---- Shortcut (F11 by default, rebindable via Edit > Shortcuts) ----
