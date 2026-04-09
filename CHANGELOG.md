@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Tools > Fullscreen Play menu (standard third-party plugin location) with Auto-Fullscreen on Play, Toggle Fullscreen (Ctrl+Shift+F11), Check for Update, and Settings
+- Tools > Fullscreen Play menu (standard third-party plugin location) with Auto-Fullscreen on Play (Ctrl+Shift+F11), Toggle Fullscreen (F11), Check for Update, and Settings
 - Check for Update menu item — one-click update check and install via UPM Client API
 - Material Design 3 styled toast with flat dark theme and anti-aliased rounded keycap badges
 - Internationalization (i18n) — all UI strings localized, English and German included, extensible via JSON files in `Editor/Locales/`

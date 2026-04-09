@@ -214,8 +214,8 @@ EditorApplication.playModeStateChanged
 ```
 
 **Menu items (Tools/ — standard for third-party plugins):**
-- `Tools > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
-- `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
+- `Tools > Fullscreen Play > Auto-Fullscreen on Play` (Ctrl+Shift+F11) - persistent toggle with checkmark
+- `Tools > Fullscreen Play > Toggle Fullscreen` (F11) - toggles fullscreen during play (greyed out when not playing)
 - `Tools > Fullscreen Play > Check for Update...` - checks for and installs the latest version
 - `Tools > Fullscreen Play > Settings...` - opens Preferences panel
 
