@@ -447,7 +447,16 @@ Games using `Cursor.lockState = CursorLockMode.Locked` will lock the cursor in t
 Alt-tabbing while fullscreen will bring other windows in front. The fullscreen window remains open in the background. The user can alt-tab back or press F11/Esc to exit. The `HWND_TOPMOST` flag is only set during the initial window creation; it doesn't prevent alt-tab from working normally.
 
 ### Exclusive Fullscreen
-The `FullscreenMode.ExclusiveFullscreen` enum value exists in code but is not yet implemented. The Fullscreen Mode dropdown in Preferences is disabled (greyed out), locked to `FullscreenWindowed`. Any stale `ExclusiveFullscreen` pref saved from a prior version is auto-reverted on startup. True exclusive fullscreen in the editor would require `ChangeDisplaySettings` (Windows) to change the display resolution, which risks destabilizing the editor. This is deferred to a future version with proper safety guards.
+The `FullscreenMode.ExclusiveFullscreen` enum value exists in code but is not yet implemented. The Fullscreen Mode dropdown in Preferences is disabled (greyed out), locked to `FullscreenWindowed`. Any stale `ExclusiveFullscreen` pref saved from a prior version is auto-reverted on startup.
+
+**Why it's deferred:** Exclusive fullscreen requires calling Win32 `ChangeDisplaySettings` to change the monitor's actual resolution — the same thing a built game does when running in exclusive mode. The risk in the editor context is that if anything goes wrong (Unity crash, unhandled exception, editor freeze), the display stays at the changed resolution. The user would need to manually revert via Windows display settings or wait for the OS timeout. In a built game this is expected; in an editor plugin it could trash the developer's workspace mid-session.
+
+**What safe implementation would require:**
+- Save original display settings via `EnumDisplaySettings` before changing
+- Restore on every exit path: fullscreen exit, play mode stop, domain reload, `beforeAssemblyReload`, and editor quit
+- A watchdog timer (separate thread or Win32 timer) that auto-restores if the main thread becomes unresponsive
+- Graceful handling of multi-monitor setups where only one display changes resolution
+- Windows-only behind `#if UNITY_EDITOR_WIN` (macOS/Linux have no equivalent editor-safe API)
 
 ### Toolbar Dropdown Overlay Positioning
 The `GameViewToolbarInjector` overlay position is calculated from the known toolbar layout structure, but the left-side element width (display popup, resolution popup, zoom slider) is estimated. Any estimation error is halved by the flex-space split and absorbed by the overlay's extra width. In rare configurations (e.g., XR mode active, RenderDoc attached), additional conditional toolbar buttons may shift the dropdown further. If the overlay visually misaligns, it remains functional — and the Edit menu / F11 shortcut always work. Adjust `EstimatedLeftGroupWidth` in `GameViewToolbarInjector.cs` to fine-tune for a specific setup.

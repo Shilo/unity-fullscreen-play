@@ -11,7 +11,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **F11 hotkey** — toggle fullscreen on/off during Play mode (rebindable via Edit > Shortcuts)
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
-- **Fullscreen Windowed** mode — **Exclusive Fullscreen** planned for a future release
+- **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
