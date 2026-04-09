@@ -150,7 +150,7 @@ namespace Shilo.FullscreenPlay.Editor
 
             // Label text
             _labelStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f, alpha);
-            var labelContent = new GUIContent(L10n.Tr("exit_fullscreen"));
+            var labelContent = new GUIContent(I18n.Tr("exit_fullscreen"));
             float labelWidth = _labelStyle.CalcSize(labelContent).x;
             GUI.Label(new Rect(cursorX, 0, labelWidth, fullRect.height), labelContent, _labelStyle);
             cursorX += labelWidth + TextKeyGap;

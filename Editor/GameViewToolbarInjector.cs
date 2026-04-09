@@ -82,11 +82,11 @@ namespace Shilo.FullscreenPlay.Editor
             if (s_Labels != null) return;
             s_Labels = new[]
             {
-                L10n.Tr("play_focused"),
-                L10n.Tr("play_maximized"),
-                L10n.Tr("play_unfocused")
+                I18n.Tr("play_focused"),
+                I18n.Tr("play_maximized"),
+                I18n.Tr("play_unfocused")
             };
-            s_PlayFullscreenLabel = L10n.Tr("play_fullscreen");
+            s_PlayFullscreenLabel = I18n.Tr("play_fullscreen");
         }
 
         // ================================================================
