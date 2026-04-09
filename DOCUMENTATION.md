@@ -217,11 +217,6 @@ EditorApplication.playModeStateChanged
 - `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
 - `Tools > Fullscreen Play > Settings...` - opens Preferences panel
 
-**Edit menu (mirrors Tools/ for discoverability):**
-- `Edit > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
-- `Edit > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
-- `Edit > Fullscreen Play > Settings...` - opens Preferences panel
-
 **Keyboard handling:**
 - **F11** via `[Shortcut("Fullscreen Play/Toggle Fullscreen", KeyCode.F11)]` - Unity's official Shortcuts API, rebindable via Edit > Shortcuts
 - **Escape** via `EditorApplication.globalEventHandler` (reflection) - intercepts Escape globally but only acts when fullscreen is active, then calls `Event.Use()` to consume it
@@ -408,7 +403,7 @@ The play-mode dropdown (`Play Focused / Play Maximized / Play Unfocused`) is ren
 
 Option 3 was chosen. It requires no external dependencies, uses only public APIs (`IMGUIContainer`, `EditorGUI.DropdownButton`, `GenericMenu`), and the positioning can be calculated dynamically from the known toolbar layout structure. The overlay is wider than the original (140 vs 110 px) to absorb positioning estimation error.
 
-The `Edit > Fullscreen Play` menu and F11 shortcut remain as universal fallbacks — they work even if the overlay injection silently fails due to an API change.
+The `Tools > Fullscreen Play` menu and F11 shortcut remain as universal fallbacks — they work even if the overlay injection silently fails due to an API change.
 
 ### Decision 7: UPM Package at Repo Root
 

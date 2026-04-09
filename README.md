@@ -7,7 +7,6 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 ## Features
 
 - **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play, toggle fullscreen (Ctrl+Shift+F11), and settings
-- **Edit menu** — Edit > Fullscreen Play mirrors the Tools menu for discoverability
 - **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle fullscreen during Play mode (greyed out when not playing)
@@ -58,11 +57,11 @@ Add this line to your project's `Packages/manifest.json`:
 2. Press Play as usual — the Game view fills the entire screen
 3. Press **Esc** or **F11** to exit fullscreen
 
-You can also enable this from the Game view toolbar dropdown (select "Play Fullscreen") or via **Edit > Fullscreen Play > Play Fullscreen**.
+You can also enable this from the Game view toolbar dropdown (select "Play Fullscreen").
 
 ### Manual fullscreen (during Play mode)
 - Press **F11** to toggle fullscreen
-- Press **Ctrl+Shift+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen** (also available under **Edit > Fullscreen Play**)
+- Press **Ctrl+Shift+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen**
 - These are greyed out when not in Play mode
 
 ### Settings
