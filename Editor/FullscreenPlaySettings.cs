@@ -55,6 +55,10 @@ namespace Shilo.FullscreenPlay.Editor
         public FullscreenPlaySettingsProvider()
             : base("Preferences/Fullscreen Play", SettingsScope.User)
         {
+            // One-time migration: revert any stale ExclusiveFullscreen pref
+            // saved before the feature was disabled.
+            if (FullscreenPlaySettings.Mode == FullscreenMode.ExclusiveFullscreen)
+                FullscreenPlaySettings.Mode = FullscreenMode.FullscreenWindowed;
         }
 
         public override void OnGUI(string searchContext)
@@ -76,11 +80,8 @@ namespace Shilo.FullscreenPlay.Editor
                         new GUIContent("Fullscreen Mode",
                             "Fullscreen Windowed: borderless window covering the screen.\n" +
                             "Exclusive Fullscreen is planned for a future release."),
-                        FullscreenMode.FullscreenWindowed);
+                        FullscreenPlaySettings.Mode);
                 }
-
-                if (FullscreenPlaySettings.Mode == FullscreenMode.ExclusiveFullscreen)
-                    FullscreenPlaySettings.Mode = FullscreenMode.FullscreenWindowed;
 
                 EditorGUILayout.Space(10);
                 EditorGUILayout.LabelField("Hotkey", EditorStyles.boldLabel);
