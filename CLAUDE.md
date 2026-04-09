@@ -31,6 +31,10 @@ Changelog: CHANGELOG.md
 Release workflow: .github/workflows/release.yml
 UPM manifest: package.json
 
+## Adding Files
+
+Every new script file (or any asset) must have a corresponding .meta file with a unique GUID. Without the .meta, Unity will not compile the script. Copy an existing .meta as a template and replace the guid field with a new random 32-hex-character GUID.
+
 ## Constraints
 
 Editor-only (includePlatforms: Editor in asmdef). No Runtime/ folder.
