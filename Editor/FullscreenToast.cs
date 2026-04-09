@@ -14,6 +14,7 @@ namespace Shilo.FullscreenPlay.Editor
         private double _startTime;
         private float _duration;
         private string _message;
+        private GUIStyle _labelStyle;
 
         private const float FadeStart = 0.65f; // start fading at 65% of duration
         private const float ToastWidth = 340f;
@@ -82,16 +83,19 @@ namespace Shilo.FullscreenPlay.Editor
             // Subtle border
             DrawBorder(fullRect, new Color(0.35f, 0.35f, 0.35f, 0.6f * alpha));
 
-            // Text
-            var style = new GUIStyle(EditorStyles.label)
+            // Text — cache the style, only update alpha each frame
+            if (_labelStyle == null)
             {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 13,
-                fontStyle = FontStyle.Normal,
-                normal = { textColor = new Color(0.9f, 0.9f, 0.9f, alpha) }
-            };
+                _labelStyle = new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 13,
+                    fontStyle = FontStyle.Normal
+                };
+            }
+            _labelStyle.normal.textColor = new Color(0.9f, 0.9f, 0.9f, alpha);
 
-            GUI.Label(fullRect, _message, style);
+            GUI.Label(fullRect, _message, _labelStyle);
         }
 
         private static void DrawBorder(Rect rect, Color color)
