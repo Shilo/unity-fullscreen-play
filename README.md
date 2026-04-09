@@ -77,9 +77,15 @@ The F11 hotkey can be rebound in **Edit > Shortcuts** under "Fullscreen Play".
 
 ## How It Works
 
-The package creates a second borderless `GameView` window via Unity's internal API and positions it to cover the entire screen. The original Game tab remains untouched — closing the fullscreen window simply returns you to the normal editor layout.
+Unity's Game tab is internally an `EditorWindow` called `GameView`. This package creates a **second** GameView instance and shows it as a borderless popup window sized to cover your entire screen. Both GameViews render the game simultaneously — the original stays safely docked in your editor layout, and the fullscreen one overlays everything.
 
-On Windows, native Win32 APIs ensure the window covers the taskbar. Alt-tab works normally.
+When you exit fullscreen (Esc, F11, or stopping Play), the popup is simply closed. Your editor layout is never modified — there's nothing to restore.
+
+**On Windows**, the popup window alone wouldn't cover the taskbar, so native Win32 APIs (`SetWindowPos`, `SetWindowLong`) strip the window chrome and position it across the full screen. Alt-tab works normally — the fullscreen window doesn't pin itself above other applications.
+
+**The toolbar dropdown** ("Play Fullscreen" alongside Play Focused / Maximized / Unfocused) works by overlaying an invisible button on top of Unity's built-in dropdown. Since the built-in dropdown is driven by an enum that can't be extended, the package draws its own identical dropdown on top that includes the extra option. If Unity changes its internal toolbar layout in a future version, the overlay silently disables itself and the Edit menu / F11 shortcut still work.
+
+For the full technical deep-dive, see [DOCUMENTATION.md](DOCUMENTATION.md).
 
 ## License
 
