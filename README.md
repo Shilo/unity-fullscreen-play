@@ -6,7 +6,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 
 ## Features
 
-- **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play, toggle fullscreen (Ctrl+Shift+F11), and settings
+- **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play, toggle fullscreen (Ctrl+Shift+F11), check for update, and settings
 - **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle fullscreen during Play mode (greyed out when not playing)
@@ -14,6 +14,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)
+- **Check for Update** — one-click update check via Tools > Fullscreen Play > Check for Update
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
@@ -64,6 +65,9 @@ You can also enable this from the Game view toolbar dropdown (select "Play Fulls
 - Press **Ctrl+Shift+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen**
 - These are greyed out when not in Play mode
 
+### Check for Update
+Use **Tools > Fullscreen Play > Check for Update...** to fetch and install the latest version from the Git repository.
+
 ### Settings
 Open **Edit > Preferences > Fullscreen Play** to configure:
 
@@ -86,7 +90,7 @@ When you exit fullscreen (Esc, F11, or stopping Play), the popup is simply close
 
 **On Windows**, the popup window alone wouldn't cover the taskbar, so native Win32 APIs (`SetWindowPos`, `SetWindowLong`) strip the window chrome and position it across the full screen. Alt-tab works normally — the fullscreen window doesn't pin itself above other applications.
 
-**The toolbar dropdown** ("Play Fullscreen" alongside Play Focused / Maximized / Unfocused) works by overlaying an invisible button on top of Unity's built-in dropdown. Since the built-in dropdown is driven by an enum that can't be extended, the package draws its own identical dropdown on top that includes the extra option. If Unity changes its internal toolbar layout in a future version, the overlay silently disables itself and the Edit menu / F11 shortcut still work.
+**The toolbar dropdown** ("Play Fullscreen" alongside Play Focused / Maximized / Unfocused) works by overlaying an invisible button on top of Unity's built-in dropdown. Since the built-in dropdown is driven by an enum that can't be extended, the package draws its own identical dropdown on top that includes the extra option. If Unity changes its internal toolbar layout in a future version, the overlay silently disables itself and the Tools menu / F11 shortcut still work.
 
 For the full technical deep-dive, see [DOCUMENTATION.md](DOCUMENTATION.md).
 

@@ -157,6 +157,7 @@ unity-fullscreen-play/
     ├── FullscreenPlaySettings.cs             # Settings + preferences UI
     ├── FullscreenToast.cs                    # Toast notification overlay (MD3 flat dark theme)
     ├── GameViewToolbarInjector.cs            # Dropdown injection into GameView toolbar
+    ├── PackageUpdater.cs                     # One-click update check via UPM Client API
     ├── I18n.cs                               # File-based internationalization
     └── Locales/
         ├── en.json                           # English translations (base/fallback)
@@ -215,6 +216,7 @@ EditorApplication.playModeStateChanged
 **Menu items (Tools/ — standard for third-party plugins):**
 - `Tools > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
 - `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
+- `Tools > Fullscreen Play > Check for Update...` - checks for and installs the latest version
 - `Tools > Fullscreen Play > Settings...` - opens Preferences panel
 
 **Keyboard handling:**
@@ -263,7 +265,17 @@ A small borderless popup (`EditorWindow` via `ShowPopup()`) that displays "Press
 
 **Why a separate EditorWindow:** Since the fullscreen GameView is an internal Unity type, we cannot override its `OnGUI` to draw overlays. A separate popup window layered on top is the only clean approach. The toast is shown with a `delayCall` to ensure it appears above the fullscreen window, then focus is returned to the GameView so game input works.
 
-#### 5. GameViewToolbarInjector.cs - The Dropdown
+#### 5. PackageUpdater.cs - Update Check
+
+Provides a one-click update mechanism accessible via `Tools > Fullscreen Play > Check for Update...`. Uses Unity's Package Manager Client API (`UnityEditor.PackageManager.Client`) to:
+
+1. List installed packages to find the current version
+2. Re-add the package from the Git URL to fetch the latest version
+3. Display progress via `EditorUtility.DisplayProgressBar` and results via dialog
+
+All user-facing strings (progress messages, error messages, success confirmation) are localized via `I18n.Tr()`.
+
+#### 6. GameViewToolbarInjector.cs - The Dropdown
 
 Injects "Play Fullscreen" as a fourth option into the GameView's play-mode dropdown (alongside Play Focused, Play Maximized, Play Unfocused).
 
@@ -286,6 +298,15 @@ The toolbar layout from `DoToolbarGUI()` source is:
 The two `GUILayout.FlexibleSpace()` calls split remaining horizontal space equally. RightGroup (Audio, Shortcuts, Stats, Gizmos) and MiddleButtons (Frame Debugger) have deterministic widths. LeftGroup (display/resolution popups, zoom slider) is estimated. The `style.right` offset is recalculated on every `GeometryChangedEvent` (window resize). Any estimation error from the left-side width is halved by the flex-space split, and the overlay's extra width (140 vs 110 px) absorbs the remainder.
 
 **Forward compatibility:** Every reflection access, visual tree operation, and drawing callback is individually wrapped in `try/catch`. If any internal API changes, the injector silently disables itself. The file is fully self-contained — deleting `GameViewToolbarInjector.cs` removes the feature entirely with no impact on other components.
+
+#### 7. I18n.cs - Internationalization
+
+File-based internationalization system that loads JSON locale files from `Editor/Locales/{lang}.json`. Supports 14 languages via `SystemLanguage` enum mapping. English (`en.json`) is always loaded as the fallback; the current editor language file is loaded on top, overriding matching keys.
+
+- Detects editor language via `LocalizationDatabase.currentEditorLanguage` (reflection) with `EditorPrefs` fallback
+- Implements a minimal JSON parser for flat `{ "key": "value" }` objects (avoids external dependencies)
+- `Tr(key)` returns the localized string, falling back to the key itself if not found
+- To add a new language: create a JSON file in `Editor/Locales/` named with the language code (e.g. `fr.json`)
 
 ### Technical Deep Dive
 
@@ -462,7 +483,7 @@ The `FullscreenMode.ExclusiveFullscreen` enum value exists in code but is not ye
 - Windows-only behind `#if UNITY_EDITOR_WIN` (macOS/Linux have no equivalent editor-safe API)
 
 ### Toolbar Dropdown Overlay Positioning
-The `GameViewToolbarInjector` overlay position is calculated from the known toolbar layout structure, but the left-side element width (display popup, resolution popup, zoom slider) is estimated. Any estimation error is halved by the flex-space split and absorbed by the overlay's extra width. In rare configurations (e.g., XR mode active, RenderDoc attached), additional conditional toolbar buttons may shift the dropdown further. If the overlay visually misaligns, it remains functional — and the Edit menu / F11 shortcut always work. Adjust `EstimatedLeftGroupWidth` in `GameViewToolbarInjector.cs` to fine-tune for a specific setup.
+The `GameViewToolbarInjector` overlay position is calculated from the known toolbar layout structure, but the left-side element width (display popup, resolution popup, zoom slider) is estimated. Any estimation error is halved by the flex-space split and absorbed by the overlay's extra width. In rare configurations (e.g., XR mode active, RenderDoc attached), additional conditional toolbar buttons may shift the dropdown further. If the overlay visually misaligns, it remains functional — and the Tools menu / F11 shortcut always work. Adjust `EstimatedLeftGroupWidth` in `GameViewToolbarInjector.cs` to fine-tune for a specific setup.
 
 ### GameView Toolbar Property
 The `showToolbar` property accessed via reflection is internal to Unity and may change or be removed in future versions. If the property is not found, the toolbar will simply remain visible - the fullscreen experience still works, just with a small toolbar at the top.
@@ -508,7 +529,7 @@ Without a tag, Unity resolves `HEAD` of the default branch, which may include un
 - Graceful fallbacks when reflection targets are missing
 
 **The implementation is focused:**
-- 6 C# files + 2 JSON locale files
+- 7 C# files + 2 JSON locale files
 - Zero runtime footprint (editor-only assembly)
 - No dependencies beyond Unity itself
 - Installs via a single Git URL
@@ -519,6 +540,7 @@ Without a tag, Unity resolves `HEAD` of the default branch, which may include un
 - Familiar UX (Esc/F11, toast notification like browser fullscreen)
 - Configurable behavior through Unity's native Preferences UI
 - Rebindable hotkey through Unity's native Shortcuts Manager
+- One-click update check via the Tools menu
 - Safe cleanup on play mode exit, domain reload, and editor restart
 - Forward-compatible: every reflection point silently no-ops on failure
 

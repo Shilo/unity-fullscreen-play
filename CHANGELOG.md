@@ -9,17 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Tools > Fullscreen Play menu (standard third-party plugin location) with Auto-Fullscreen on Play, Toggle Fullscreen (Ctrl+Shift+F11), and Settings
-- Edit > Fullscreen Play menu now mirrors Tools menu exactly for discoverability
+- Tools > Fullscreen Play menu (standard third-party plugin location) with Auto-Fullscreen on Play, Toggle Fullscreen (Ctrl+Shift+F11), Check for Update, and Settings
+- Check for Update menu item — one-click update check and install via UPM Client API
 - Material Design 3 styled toast with flat dark theme and anti-aliased rounded keycap badges
 - Internationalization (i18n) — all UI strings localized, English and German included, extensible via JSON files in `Editor/Locales/`
 - Settings panel strings (labels, tooltips, help text) are now fully localized
+- Update-related i18n strings for progress, error, and success messages
 
 ### Changed
 
 - Toggle Fullscreen menu items are greyed out when not in Play mode (no more forced play start)
-- "Auto-Fullscreen on Play" is now the first item in both Tools and Edit menus
+- "Auto-Fullscreen on Play" is now the first item in the Tools menu
 - "Show on Refocus" setting moved above "Toast Duration" in Preferences
+
+### Removed
+
+- Edit > Fullscreen Play menu entries (Tools menu is now the sole menu location)
 
 ### Fixed
 
