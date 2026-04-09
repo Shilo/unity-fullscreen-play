@@ -6,12 +6,12 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 
 ## Features
 
-- **Play Fullscreen** toggle — automatically fullscreen every time you press Play
+- **Play Fullscreen** in the Game view dropdown — sits alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode (rebindable via Edit > Shortcuts)
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
-- **Fullscreen Windowed** or **Exclusive Fullscreen** modes
 - **Settings panel** in Edit > Preferences > Fullscreen Play
+- **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
 
 ## Requirements
@@ -49,9 +49,12 @@ Add this line to your project's `Packages/manifest.json`:
 ## Usage
 
 ### Auto-fullscreen on Play
-1. Go to **Edit > Fullscreen Play > Play Fullscreen** (toggle)
-2. Press the Play button as usual — the Game view fills the entire screen
-3. Press **Esc** or **F11** to exit fullscreen
+1. In the Game view toolbar, click the play-mode dropdown (where it says "Play Maximized")
+2. Select **Play Fullscreen**
+3. Press Play as usual — the Game view fills the entire screen
+4. Press **Esc** or **F11** to exit fullscreen
+
+Alternatively, use **Edit > Fullscreen Play > Play Fullscreen** from the menu bar.
 
 ### Manual fullscreen
 - Press **F11** during Play mode to toggle fullscreen
@@ -63,7 +66,7 @@ Open **Edit > Preferences > Fullscreen Play** to configure:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Play Fullscreen | Off | Auto-fullscreen on entering Play mode |
-| Fullscreen Mode | Fullscreen Windowed | Borderless window or exclusive fullscreen |
+| Fullscreen Mode | Fullscreen Windowed | Borderless window covering the screen |
 | Enable F11 Hotkey | On | Allow F11 to toggle fullscreen |
 | Show Toast | On | Show exit instructions overlay |
 | Toast Duration | 3s | How long the toast is visible |

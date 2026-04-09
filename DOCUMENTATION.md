@@ -222,6 +222,14 @@ EditorApplication.playModeStateChanged
 - F11 uses the `[Shortcut]` API because it should be discoverable and rebindable through Unity's Shortcuts Manager. Users can change it to any key they want.
 - Escape uses the global event handler because registering Escape as a `[Shortcut]` would conflict with every game that uses Escape. The global handler only intercepts it when fullscreen is active and consumes the event so the game doesn't receive it.
 
+**Assembly reload cleanup:**
+`AssemblyReloadEvents.beforeAssemblyReload` fires before domain reload (script recompilation, package disable/re-enable). The handler:
+1. Unhooks the `globalEventHandler` reflection delegate so it doesn't reference an unloaded assembly
+2. Closes any open fullscreen window
+3. Calls `GameViewToolbarInjector.RemoveAllOverlays()` to remove all injected `IMGUIContainer` elements from GameView visual trees
+
+This ensures zero stale delegates, zero orphaned visual elements, and zero errors when the package is disabled, re-enabled, or scripts recompile.
+
 #### 3. FullscreenPlaySettings.cs - Configuration
 
 Settings are stored in `EditorPrefs` (per-user, not per-project) with the prefix `FullscreenPlay.`:
@@ -320,22 +328,25 @@ When creating a new GameView instance, it starts with default settings (Display 
 
 This ensures the fullscreen view renders identically to what the user was seeing in their Game tab.
 
-#### Domain Reload Safety
+#### Domain Reload & Package Disable Safety
 
-When Unity recompiles scripts during play mode, a "domain reload" occurs - all static variables are reset to their defaults. This means `s_FullscreenWindow` becomes `null`, but the actual popup window may still exist.
+When Unity recompiles scripts or a package is disabled, a domain reload occurs — all managed static state is reset. The package handles this in two phases:
 
-The `[InitializeOnLoad]` constructor handles this:
+**Before reload** (`AssemblyReloadEvents.beforeAssemblyReload`):
+1. Unhook the `globalEventHandler` reflection delegate (prevents stale delegate references)
+2. Close the fullscreen popup window if open
+3. Remove all injected `IMGUIContainer` overlays from GameView visual trees (prevents dead callbacks)
 
-```csharp
-static FullscreenPlayController()
-{
-    // If not in play mode after reload, clean up any orphaned state
-    if (!EditorApplication.isPlayingOrWillChangePlaymode)
-        FullscreenGameView.Cleanup();
-}
-```
+**After reload** (`[InitializeOnLoad]` static constructor):
+1. Re-subscribe managed events (`playModeStateChanged`, `windowFocusChanged`)
+2. Re-hook the `globalEventHandler`
+3. Re-inject toolbar overlays into GameView instances
+4. If not in play mode, call `FullscreenGameView.Cleanup()` to clear orphaned state
 
-If domain reload happens during play mode, the fullscreen window will close on its own (Unity closes orphaned popup windows during reload). The static state reset means `IsFullscreen` returns false, and the system is in a clean state.
+This two-phase approach ensures:
+- **Package disable:** `beforeAssemblyReload` runs, cleans up all external state, then the assembly unloads cleanly. No stale delegates or visual elements remain.
+- **Package re-enable:** `[InitializeOnLoad]` runs fresh in the new domain. All state starts clean.
+- **Script recompilation:** Both phases run in sequence — cleanup then re-init. No accumulation of duplicate handlers.
 
 ---
 
