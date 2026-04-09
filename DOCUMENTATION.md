@@ -208,9 +208,14 @@ EditorApplication.playModeStateChanged
     -> ExitingPlayMode: if fullscreen active, exit fullscreen
 ```
 
-**Menu items:**
-- `Edit > Fullscreen Play > Play Fullscreen` - toggle (persists via EditorPrefs)
-- `Edit > Fullscreen Play > Enter Fullscreen Now` - one-shot or toggle if already playing
+**Menu items (Tools/ — standard for third-party plugins):**
+- `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+F11) - toggles fullscreen during play; starts play+fullscreen if not playing
+- `Tools > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
+- `Tools > Fullscreen Play > Settings...` - opens Preferences panel
+
+**Edit menu (fallback for discoverability):**
+- `Edit > Fullscreen Play > Play Fullscreen` - same toggle as Tools > Auto-Fullscreen
+- `Edit > Fullscreen Play > Enter Fullscreen Now` - same as Tools > Toggle Fullscreen
 - `Edit > Fullscreen Play > Settings...` - opens Preferences panel
 
 **Keyboard handling:**

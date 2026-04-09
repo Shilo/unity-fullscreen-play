@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Tools > Fullscreen Play menu with Toggle Fullscreen (Ctrl+F11), Auto-Fullscreen on Play, and Settings
+- Ctrl+F11 keyboard shortcut — toggles fullscreen or starts play+fullscreen from anywhere
+
 ### Fixed
 
 - Fullscreen window no longer pins above all windows permanently (alt-tab now works)

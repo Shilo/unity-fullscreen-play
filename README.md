@@ -6,9 +6,10 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 
 ## Features
 
-- **Play Fullscreen** in the Game view dropdown — sits alongside Play Focused / Maximized / Unfocused
-- **Edit menu fallback** — Edit > Fullscreen Play menu with toggle, instant-enter, and settings
-- **F11 hotkey** — toggle fullscreen on/off during Play mode (rebindable via Edit > Shortcuts)
+- **Tools menu** — Tools > Fullscreen Play with toggle fullscreen (Ctrl+F11), auto-play setting, and settings
+- **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
+- **F11 hotkey** — toggle fullscreen on/off during Play mode
+- **Ctrl+F11** — toggle fullscreen or start play+fullscreen from anywhere
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
@@ -51,16 +52,16 @@ Add this line to your project's `Packages/manifest.json`:
 ## Usage
 
 ### Auto-fullscreen on Play
-1. In the Game view toolbar, click the play-mode dropdown (where it says "Play Maximized")
-2. Select **Play Fullscreen**
-3. Press Play as usual — the Game view fills the entire screen
-4. Press **Esc** or **F11** to exit fullscreen
+1. Go to **Tools > Fullscreen Play > Auto-Fullscreen on Play** (toggle with checkmark)
+2. Press Play as usual — the Game view fills the entire screen
+3. Press **Esc** or **F11** to exit fullscreen
 
-Alternatively, use **Edit > Fullscreen Play > Play Fullscreen** from the menu bar.
+You can also enable this from the Game view toolbar dropdown (select "Play Fullscreen") or via **Edit > Fullscreen Play > Play Fullscreen**.
 
 ### Manual fullscreen
+- Press **Ctrl+F11** to toggle fullscreen (starts Play if not already playing)
 - Press **F11** during Play mode to toggle fullscreen
-- Or use **Edit > Fullscreen Play > Enter Fullscreen Now**
+- Or use **Tools > Fullscreen Play > Toggle Fullscreen**
 
 ### Settings
 Open **Edit > Preferences > Fullscreen Play** to configure:
