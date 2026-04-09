@@ -1,5 +1,5 @@
 {
-  "name": "com.shilocity.fullscreen-play",
+  "name": "com.shilo.fullscreen-play",
   "version": "0.1.0",
   "displayName": "Fullscreen Play",
   "description": "Play Fullscreen option to test your game in true fullscreen directly from the Unity Editor. Press Escape or F11 to exit.",
@@ -12,12 +12,12 @@
     "testing"
   ],
   "author": {
-    "name": "Shilocity",
-    "url": "https://github.com/Shilocity"
+    "name": "Shilo",
+    "url": "https://github.com/Shilo"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Shilocity/unity-fullscreen-play.git"
+    "url": "https://github.com/Shilo/unity-fullscreen-play.git"
   }
 }

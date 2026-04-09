@@ -1,6 +1,6 @@
 {
-    "name": "Shilocity.FullscreenPlay.Editor",
-    "rootNamespace": "Shilocity.FullscreenPlay.Editor",
+    "name": "Shilo.FullscreenPlay.Editor",
+    "rootNamespace": "Shilo.FullscreenPlay.Editor",
     "references": [],
     "includePlatforms": [
         "Editor"
