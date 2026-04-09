@@ -15,7 +15,6 @@ namespace Shilo.FullscreenPlay.Editor
     {
         private static EditorWindow s_FullscreenWindow;
         private static Rect s_FullscreenRect;
-        private static bool s_HadFocus;
 
         public static bool IsFullscreen => s_FullscreenWindow != null;
 
@@ -84,16 +83,17 @@ namespace Shilo.FullscreenPlay.Editor
                 };
             }
 
-            // Start tracking focus for toast-on-refocus
-            s_HadFocus = true;
-            EditorApplication.update += TrackFocus;
+            // Listen for app-level focus changes (alt-tab back) to re-show toast.
+            // EditorApplication.focusChanged fires when the entire Unity app
+            // gains/loses OS focus — NOT when clicking between editor windows.
+            EditorApplication.focusChanged += OnAppFocusChanged;
         }
 
         public static void ExitFullscreen()
         {
             if (!IsFullscreen) return;
 
-            EditorApplication.update -= TrackFocus;
+            EditorApplication.focusChanged -= OnAppFocusChanged;
             FullscreenToast.Hide();
 
 #if UNITY_EDITOR_WIN
@@ -109,23 +109,16 @@ namespace Shilo.FullscreenPlay.Editor
             s_FullscreenRect = Rect.zero;
         }
 
-        private static void TrackFocus()
+        private static void OnAppFocusChanged(bool focused)
         {
-            if (!IsFullscreen) return;
+            if (!focused || !IsFullscreen) return;
 
-            bool hasFocus = EditorWindow.focusedWindow == s_FullscreenWindow;
-
-            if (hasFocus && !s_HadFocus)
+            // Unity app just regained OS focus (user alt-tabbed back)
+            if (FullscreenPlaySettings.ShowToast
+                && FullscreenPlaySettings.ShowToastOnRefocus)
             {
-                // Window just regained focus (e.g. after alt-tab back)
-                if (FullscreenPlaySettings.ShowToast
-                    && FullscreenPlaySettings.ShowToastOnRefocus)
-                {
-                    FullscreenToast.ResetTimer(s_FullscreenRect);
-                }
+                FullscreenToast.ResetTimer(s_FullscreenRect);
             }
-
-            s_HadFocus = hasFocus;
         }
 
         public static void ToggleFullscreen()
@@ -141,7 +134,7 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         public static void Cleanup()
         {
-            EditorApplication.update -= TrackFocus;
+            EditorApplication.focusChanged -= OnAppFocusChanged;
             if (s_FullscreenWindow != null)
             {
                 try { s_FullscreenWindow.Close(); }
@@ -149,7 +142,6 @@ namespace Shilo.FullscreenPlay.Editor
             }
             s_FullscreenWindow = null;
             s_FullscreenRect = Rect.zero;
-            s_HadFocus = false;
         }
 
         private static Rect GetTargetScreenRect()
