@@ -76,7 +76,7 @@ namespace Shilo.FullscreenPlay.Editor
 
         // ---- Menu items (Tools/ — standard for third-party plugins) ----
 
-        private const string ToolsToggle    = "Tools/Fullscreen Play/Toggle Fullscreen";
+        private const string ToolsToggle    = "Tools/Fullscreen Play/Toggle Fullscreen %#F11";
         private const string ToolsAuto      = "Tools/Fullscreen Play/Auto-Fullscreen on Play";
         private const string ToolsSettings  = "Tools/Fullscreen Play/Settings...";
 
@@ -90,6 +90,8 @@ namespace Shilo.FullscreenPlay.Editor
         [MenuItem(ToolsToggle, false, 100)]
         private static void ToolsToggleFullscreen()
         {
+            // Guard needed because menu shortcuts bypass validation.
+            if (!EditorApplication.isPlaying) return;
             FullscreenGameView.ToggleFullscreen();
         }
 
@@ -136,6 +138,7 @@ namespace Shilo.FullscreenPlay.Editor
         [MenuItem(EditEnterNow, false, 161)]
         private static void EditEnterFullscreenNow()
         {
+            if (!EditorApplication.isPlaying) return;
             FullscreenGameView.ToggleFullscreen();
         }
 
