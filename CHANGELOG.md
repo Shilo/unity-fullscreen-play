@@ -9,13 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Tools > Fullscreen Play menu (standard third-party plugin location) with Toggle Fullscreen (Ctrl+Shift+F11), Auto-Fullscreen on Play, and Settings
-- Chrome-style toast notification with keycap-styled key hints (`[F11]` `[Esc]`)
-- Internationalization (i18n) — English and German, extensible via JSON files in `Editor/Locales/`
+- Tools > Fullscreen Play menu (standard third-party plugin location) with Auto-Fullscreen on Play, Toggle Fullscreen (Ctrl+Shift+F11), and Settings
+- Edit > Fullscreen Play menu now mirrors Tools menu exactly for discoverability
+- Material Design 3 styled toast with flat dark theme, rounded corners (Win32 window region), and anti-aliased keycap badges
+- Internationalization (i18n) — all UI strings localized, English and German included, extensible via JSON files in `Editor/Locales/`
+- Settings panel strings (labels, tooltips, help text) are now fully localized
 
 ### Changed
 
 - Toggle Fullscreen menu items are greyed out when not in Play mode (no more forced play start)
+- "Auto-Fullscreen on Play" is now the first item in both Tools and Edit menus
+- "Show on Refocus" setting moved above "Toast Duration" in Preferences
 
 ### Fixed
 

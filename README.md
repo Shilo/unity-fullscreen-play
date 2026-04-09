@@ -6,14 +6,15 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 
 ## Features
 
-- **Tools menu** — Tools > Fullscreen Play with toggle fullscreen (Ctrl+Shift+F11), auto-play setting, and settings
+- **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play, toggle fullscreen (Ctrl+Shift+F11), and settings
+- **Edit menu** — Edit > Fullscreen Play mirrors the Tools menu for discoverability
 - **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle fullscreen during Play mode (greyed out when not playing)
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
-- **Settings panel** in Edit > Preferences > Fullscreen Play
+- **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
@@ -61,7 +62,7 @@ You can also enable this from the Game view toolbar dropdown (select "Play Fulls
 
 ### Manual fullscreen (during Play mode)
 - Press **F11** to toggle fullscreen
-- Press **Ctrl+Shift+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen**
+- Press **Ctrl+Shift+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen** (also available under **Edit > Fullscreen Play**)
 - These are greyed out when not in Play mode
 
 ### Settings
@@ -73,6 +74,7 @@ Open **Edit > Preferences > Fullscreen Play** to configure:
 | Fullscreen Mode | Fullscreen Windowed | Currently locked; exclusive fullscreen planned |
 | Enable F11 Hotkey | On | Allow F11 to toggle fullscreen |
 | Show Toast | On | Show exit instructions overlay |
+| Show on Refocus | On | Re-show toast when fullscreen window regains focus |
 | Toast Duration | 3s | How long the toast is visible |
 
 The F11 hotkey can be rebound in **Edit > Shortcuts** under "Fullscreen Play".

@@ -155,7 +155,7 @@ unity-fullscreen-play/
     ├── FullscreenGameView.cs                 # Core fullscreen window management
     ├── FullscreenPlayController.cs           # Menu items, shortcuts, play mode hooks
     ├── FullscreenPlaySettings.cs             # Settings + preferences UI
-    ├── FullscreenToast.cs                    # Toast notification overlay (Chrome-style keycaps)
+    ├── FullscreenToast.cs                    # Toast notification overlay (MD3 flat dark theme)
     ├── GameViewToolbarInjector.cs            # Dropdown injection into GameView toolbar
     ├── I18n.cs                               # File-based internationalization
     └── Locales/
@@ -213,13 +213,13 @@ EditorApplication.playModeStateChanged
 ```
 
 **Menu items (Tools/ — standard for third-party plugins):**
-- `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
 - `Tools > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
+- `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
 - `Tools > Fullscreen Play > Settings...` - opens Preferences panel
 
-**Edit menu (fallback for discoverability):**
-- `Edit > Fullscreen Play > Play Fullscreen` - same toggle as Tools > Auto-Fullscreen
-- `Edit > Fullscreen Play > Enter Fullscreen Now` - same as Tools > Toggle Fullscreen (greyed out when not playing)
+**Edit menu (mirrors Tools/ for discoverability):**
+- `Edit > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
+- `Edit > Fullscreen Play > Toggle Fullscreen` (Ctrl+Shift+F11) - toggles fullscreen during play (greyed out when not playing)
 - `Edit > Fullscreen Play > Settings...` - opens Preferences panel
 
 **Keyboard handling:**
@@ -248,8 +248,9 @@ Settings are stored in `EditorPrefs` (per-user, not per-project) with the prefix
 | `ShowToast` | bool | true | Show exit instructions overlay |
 | `ToastDuration` | float | 3.0 | Toast visibility duration (seconds) |
 | `EnableHotkey` | bool | true | F11 hotkey enabled |
+| `ShowToastOnRefocus` | bool | true | Re-show toast on window refocus |
 
-The `FullscreenPlaySettingsProvider` class implements a `SettingsProvider` registered at `Preferences/Fullscreen Play`, accessible via Edit > Preferences. It uses standard IMGUI controls (toggles, dropdowns, sliders) with help boxes for contextual guidance.
+The `FullscreenPlaySettingsProvider` class implements a `SettingsProvider` registered at `Preferences/Fullscreen Play`, accessible via Edit > Preferences. It uses standard IMGUI controls (toggles, dropdowns, sliders) with help boxes for contextual guidance. All UI labels and tooltips are localized via `I18n.Tr()`.
 
 **Why EditorPrefs instead of ScriptableObject:** EditorPrefs are simpler for user preferences - no asset file to manage, no accidental version control of personal settings, and they survive project reimports. ScriptableObject settings would be appropriate for project-wide configuration, but fullscreen preferences are inherently per-user.
 
@@ -257,11 +258,12 @@ The `FullscreenPlaySettingsProvider` class implements a `SettingsProvider` regis
 
 A small borderless popup (`EditorWindow` via `ShowPopup()`) that displays "Press Esc or F11 to exit fullscreen" at the top-center of the screen. It fades out after the configured duration.
 
-**Rendering (Chrome-style):**
-- Dark background with subtle border
-- "Exit fullscreen" label followed by keycap-styled key boxes (`[F11]` `[Esc]`)
-- Keycaps: darker background, lighter border, bottom shadow for 3D depth
+**Rendering (Material Design 3 flat dark theme):**
+- Dark surface background (`#1E1E24` at 95% opacity), clipped to rounded corners on Windows via Win32 `CreateRoundRectRgn` + `SetWindowRgn` (12px corner radius)
+- "Exit fullscreen" label followed by flat rounded keycap badges (`[F11]` `[Esc]`), horizontally centered
+- Keycaps: slightly elevated surface color, 6px rounded corners via SDF-generated anti-aliased 9-slice textures, no border or shadow
 - Fade: linear alpha reduction from 65% to 100% of duration
+- Non-interactive: no click handling, purely visual
 - Localized via `I18n.Tr("exit_fullscreen")`
 
 **Why a separate EditorWindow:** Since the fullscreen GameView is an internal Unity type, we cannot override its `OnGUI` to draw overlays. A separate popup window layered on top is the only clean approach. The toast is shown with a `delayCall` to ensure it appears above the fullscreen window, then focus is returned to the GameView so game input works.
