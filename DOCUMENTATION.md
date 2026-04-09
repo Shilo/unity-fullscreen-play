@@ -155,7 +155,8 @@ unity-fullscreen-play/
     ├── FullscreenGameView.cs                 # Core fullscreen window management
     ├── FullscreenPlayController.cs           # Menu items, shortcuts, play mode hooks
     ├── FullscreenPlaySettings.cs             # Settings + preferences UI
-    └── FullscreenToast.cs                    # Toast notification overlay
+    ├── FullscreenToast.cs                    # Toast notification overlay
+    └── GameViewToolbarInjector.cs            # Dropdown injection into GameView toolbar
 ```
 
 **Why editor-only:** All code runs exclusively in the Unity Editor. The `includePlatforms: ["Editor"]` in the assembly definition ensures none of this code is included in player builds. There is no `Runtime/` folder because the package has zero runtime footprint.
@@ -248,6 +249,30 @@ A small borderless popup (`EditorWindow` via `ShowPopup()`) that displays "Press
 - Fade: linear alpha reduction from 65% to 100% of duration
 
 **Why a separate EditorWindow:** Since the fullscreen GameView is an internal Unity type, we cannot override its `OnGUI` to draw overlays. A separate popup window layered on top is the only clean approach. The toast is shown with a `delayCall` to ensure it appears above the fullscreen window, then focus is returned to the GameView so game input works.
+
+#### 5. GameViewToolbarInjector.cs - The Dropdown
+
+Injects "Play Fullscreen" as a fourth option into the GameView's play-mode dropdown (alongside Play Focused, Play Maximized, Play Unfocused).
+
+**The challenge:** The original dropdown is rendered via `EditorGUILayout.EnumPopup` driven by the `EnterPlayModeBehavior` enum. `EnumPopup` generates its items strictly from enum values — there is no extensibility hook, no `GenericMenu` to append to, and `DoToolbarGUI()` is private.
+
+**The solution:** Overlay an opaque `IMGUIContainer` (UIToolkit) on top of the original dropdown. The overlay draws an identical `EditorGUI.DropdownButton` styled with `EditorStyles.toolbarDropDown` that opens a `GenericMenu` containing all four options.
+
+**Detection (event-driven, no polling):**
+- `EditorWindow.windowFocusChanged` — fires when any window gains focus; new GameViews always receive focus on creation
+- `EditorApplication.playModeStateChanged` — GameViews may be recreated on mode change
+- `DetachFromPanelEvent` on the overlay — triggers re-injection if the overlay is removed (domain reload, window rebuild)
+- `EditorApplication.delayCall` — one initial scan at startup
+- Multiple rapid triggers collapse into a single scan via a `s_ScanScheduled` flag
+
+**Positioning (dynamic, width-adaptive):**
+The toolbar layout from `DoToolbarGUI()` source is:
+```
+[LeftGroup] [FlexSpace1] [Dropdown 110px] [MiddleButtons] [FlexSpace2] [RightGroup]
+```
+The two `GUILayout.FlexibleSpace()` calls split remaining horizontal space equally. RightGroup (Audio, Shortcuts, Stats, Gizmos) and MiddleButtons (Frame Debugger) have deterministic widths. LeftGroup (display/resolution popups, zoom slider) is estimated. The `style.right` offset is recalculated on every `GeometryChangedEvent` (window resize). Any estimation error from the left-side width is halved by the flex-space split, and the overlay's extra width (140 vs 110 px) absorbs the remainder.
+
+**Forward compatibility:** Every reflection access, visual tree operation, and drawing callback is individually wrapped in `try/catch`. If any internal API changes, the injector silently disables itself. The file is fully self-contained — deleting `GameViewToolbarInjector.cs` removes the feature entirely with no impact on other components.
 
 ### Technical Deep Dive
 
@@ -352,21 +377,19 @@ Since we cannot modify the internal GameView's rendering pipeline, a separate sm
 
 Focus management is critical: after showing the toast, we immediately return focus to the GameView so game input works. The toast is non-interactive - it only displays information.
 
-### Decision 6: Menu Items vs. Toolbar Dropdown Integration
+### Decision 6: Toolbar Dropdown Integration via UIToolkit Overlay
 
-**Chose: Menu items + shortcuts.**
+**Chose: Overlay injection with menu-item fallback.**
 
-The user requested integration into the "Play Maximized" dropdown. This dropdown is rendered by GameView's internal toolbar code. Modifying it would require:
-1. Decompiling GameView's toolbar rendering
-2. Using reflection or Harmony patching to inject menu items
-3. Maintaining this hack across Unity versions
+The play-mode dropdown (`Play Focused / Play Maximized / Play Unfocused`) is rendered by `EditorGUILayout.EnumPopup` inside `GameView.DoToolbarGUI()`. `EnumPopup` is driven by enum values and cannot be extended. Three strategies were considered:
 
-This fragility is not worth it for v0.1. Instead, we provide:
-- `Edit > Fullscreen Play` submenu (always accessible)
-- F11 shortcut (instant access during play)
-- `Edit > Fullscreen Play > Play Fullscreen` toggle (mirrors Play Maximized behavior)
+1. **Harmony patching** of `DoToolbarGUI()` — would allow arbitrary injection but adds an external dependency and is fragile across Unity versions.
+2. **ContainerWindow / Overlay API** — Unity's `[Overlay]` attribute requires a compile-time `Type` parameter, and `GameView` is internal. Runtime overlay registration is not publicly supported.
+3. **UIToolkit overlay on top of IMGUI** — place an opaque `IMGUIContainer` in the GameView's `rootVisualElement` that draws an identical dropdown covering the original.
 
-A future version could explore the Overlay API or toolbar integration as Unity 6's APIs mature.
+Option 3 was chosen. It requires no external dependencies, uses only public APIs (`IMGUIContainer`, `EditorGUI.DropdownButton`, `GenericMenu`), and the positioning can be calculated dynamically from the known toolbar layout structure. The overlay is wider than the original (140 vs 110 px) to absorb positioning estimation error.
+
+The `Edit > Fullscreen Play` menu and F11 shortcut remain as universal fallbacks — they work even if the overlay injection silently fails due to an API change.
 
 ### Decision 7: UPM Package at Repo Root
 
@@ -415,6 +438,9 @@ Alt-tabbing while fullscreen will bring other windows in front. The fullscreen w
 ### Exclusive Fullscreen
 The `FullscreenMode.ExclusiveFullscreen` enum value exists in settings but is not yet implemented in v0.1. True exclusive fullscreen in the editor would require `ChangeDisplaySettings` (Windows) to change the display resolution, which risks destabilizing the editor. This is deferred to a future version with proper safety guards.
 
+### Toolbar Dropdown Overlay Positioning
+The `GameViewToolbarInjector` overlay position is calculated from the known toolbar layout structure, but the left-side element width (display popup, resolution popup, zoom slider) is estimated. Any estimation error is halved by the flex-space split and absorbed by the overlay's extra width. In rare configurations (e.g., XR mode active, RenderDoc attached), additional conditional toolbar buttons may shift the dropdown further. If the overlay visually misaligns, it remains functional — and the Edit menu / F11 shortcut always work. Adjust `EstimatedLeftGroupWidth` in `GameViewToolbarInjector.cs` to fine-tune for a specific setup.
+
 ### GameView Toolbar Property
 The `showToolbar` property accessed via reflection is internal to Unity and may change or be removed in future versions. If the property is not found, the toolbar will simply remain visible - the fullscreen experience still works, just with a small toolbar at the top.
 
@@ -459,16 +485,18 @@ Without a tag, Unity resolves `HEAD` of the default branch, which may include un
 - Graceful fallbacks when reflection targets are missing
 
 **The implementation is focused:**
-- 4 C# files, ~500 lines of code total
+- 5 C# files, ~750 lines of code total
 - Zero runtime footprint (editor-only assembly)
 - No dependencies beyond Unity itself
 - Installs via a single Git URL
 
 **What it achieves:**
 - True fullscreen game testing without building
+- "Play Fullscreen" option in the GameView's play-mode dropdown
 - Familiar UX (Esc/F11, toast notification like browser fullscreen)
 - Configurable behavior through Unity's native Preferences UI
 - Rebindable hotkey through Unity's native Shortcuts Manager
 - Safe cleanup on play mode exit, domain reload, and editor restart
+- Forward-compatible: every reflection point silently no-ops on failure
 
-The package prioritizes reliability and simplicity over feature count. Future versions may add multi-monitor support, toolbar dropdown integration via the Overlay API, and true exclusive fullscreen mode.
+The package prioritizes reliability and simplicity over feature count. Future versions may add multi-monitor support and true exclusive fullscreen mode.
