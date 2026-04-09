@@ -32,17 +32,43 @@ namespace Shilo.FullscreenPlay.Editor
 
         private const string OverlayName = "fullscreen-play-dropdown-overlay";
 
+        // Overlay width — slightly wider than the original 110 px dropdown
+        // to provide error margin for positioning.
+        private const float OverlayWidth = 140f;
+        private const float OverlayHeight = 19f;
+        private const float OverlayTopOffset = 1f;
+
+        // ----- toolbar layout model (from GameView.DoToolbarGUI source) -----
+        // The toolbar is:
+        //   [LeftGroup] [FlexSpace1] [Dropdown 110px] [MiddleButtons] [FlexSpace2] [RightGroup]
+        //
+        // FlexSpace1 and FlexSpace2 split remaining space equally.
+        // RightGroup and MiddleButtons have deterministic widths;
+        // LeftGroup varies (zoom slider fills available space), so we
+        // estimate it and accept that the flex-space calculation will
+        // have a small error (~10-20 px) that the wider overlay absorbs.
+
+        /// <summary>Right-side always-present elements: Gizmos + Stats + Shortcuts + Audio.</summary>
+        private const float RightGroupWidth = 160f;
+
+        /// <summary>Buttons between the dropdown and FlexSpace2 (Frame Debugger is always present).</summary>
+        private const float MiddleButtonsWidth = 25f;
+
         /// <summary>
-        /// How often (in editor update ticks) we scan for new GameView
-        /// instances that need injection. ~30 ticks ≈ 0.5 s at 60 fps.
+        /// Estimated total width of left-side elements (window-type popup,
+        /// display popup, size popup, zoom slider). This is approximate.
+        /// Any error here is halved by the flex-space split.
         /// </summary>
-        private const int ScanInterval = 30;
+        private const float EstimatedLeftGroupWidth = 380f;
+
+        /// <summary>The original dropdown width (GUILayout.Width(110) in source).</summary>
+        private const float OriginalDropdownWidth = 110f;
 
         // ----- reflection handles (resolved once) -----
 
         private static readonly Type s_GameViewType;
-        private static readonly PropertyInfo s_BehaviorProp;   // PlayModeView.enterPlayModeBehavior
-        private static readonly Type s_BehaviorEnumType;       // PlayModeView.EnterPlayModeBehavior
+        private static readonly PropertyInfo s_BehaviorProp;    // PlayModeView.enterPlayModeBehavior
+        private static readonly Type s_BehaviorEnumType;        // PlayModeView.EnterPlayModeBehavior
         private static readonly PropertyInfo s_ShowToolbarProp; // GameView.showToolbar
         private static readonly bool s_Ready;
 
@@ -50,10 +76,6 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static readonly string[] s_Labels =
             { "Play Focused", "Play Maximized", "Play Unfocused" };
-
-        // ----- state -----
-
-        private static int s_Tick;
 
         // ================================================================
         //  Initialisation
@@ -77,13 +99,21 @@ namespace Shilo.FullscreenPlay.Editor
                 s_BehaviorEnumType = s_BehaviorProp.PropertyType;
                 if (s_BehaviorEnumType == null) return;
 
-                // Optional – used to skip the fullscreen GameView (toolbar hidden).
                 s_ShowToolbarProp = s_GameViewType.GetProperty(
                     "showToolbar",
                     BindingFlags.Instance | BindingFlags.NonPublic);
 
                 s_Ready = true;
-                EditorApplication.update += OnUpdate;
+
+                // Event-driven injection: scan when a window receives focus
+                // (new GameViews always receive focus on creation).
+                EditorWindow.windowFocusChanged += OnWindowFocusChanged;
+
+                // Re-scan when play mode changes (GameViews may be recreated).
+                EditorApplication.playModeStateChanged += _ => ScheduleScan();
+
+                // Initial scan after editor finishes loading.
+                EditorApplication.delayCall += ScanAndInject;
             }
             catch
             {
@@ -92,13 +122,35 @@ namespace Shilo.FullscreenPlay.Editor
         }
 
         // ================================================================
-        //  Periodic scan
+        //  Event-driven scanning (replaces polling)
         // ================================================================
 
-        private static void OnUpdate()
+        private static void OnWindowFocusChanged()
         {
             if (!s_Ready) return;
-            if (++s_Tick % ScanInterval != 0) return;
+            ScheduleScan();
+        }
+
+        /// <summary>
+        /// Schedules a single <see cref="ScanAndInject"/> call on the next
+        /// editor update frame. Multiple calls before the next frame
+        /// collapse into one scan.
+        /// </summary>
+        private static bool s_ScanScheduled;
+        private static void ScheduleScan()
+        {
+            if (s_ScanScheduled) return;
+            s_ScanScheduled = true;
+            EditorApplication.delayCall += () =>
+            {
+                s_ScanScheduled = false;
+                ScanAndInject();
+            };
+        }
+
+        private static void ScanAndInject()
+        {
+            if (!s_Ready) return;
 
             try
             {
@@ -109,13 +161,11 @@ namespace Shilo.FullscreenPlay.Editor
                     {
                         var window = obj as EditorWindow;
                         if (window == null) continue;
-
-                        // Skip the fullscreen popup (its toolbar is hidden).
                         if (IsToolbarHidden(window)) continue;
 
                         var root = window.rootVisualElement;
                         if (root == null) continue;
-                        if (root.Q(OverlayName) != null) continue; // already injected
+                        if (root.Q(OverlayName) != null) continue;
 
                         Inject(window, root);
                     }
@@ -148,27 +198,73 @@ namespace Shilo.FullscreenPlay.Editor
                 overlay.name        = OverlayName;
                 overlay.pickingMode = PickingMode.Position;
 
-                // --- Positioning ---------------------------------------------------
-                // The original dropdown is rendered by IMGUI inside the GameView
-                // toolbar with GUILayout.Width(110). We overlay on top of it.
-                //
-                // In Unity 6.x the toolbar elements to the RIGHT of the dropdown are
-                // (right-to-left): Gizmos (~65 px) · Stats (~35 px) · icon buttons
-                // (~55 px) · VSync icon (~25 px) ≈ 180 px total.
-                //
-                // If Unity changes its toolbar layout these values will be wrong,
-                // but the overlay will simply appear offset — still functional, and
-                // the Edit menu / F11 shortcut always work as a fallback.
-                // -----------------------------------------------------------------------
                 overlay.style.position = Position.Absolute;
-                overlay.style.top      = new StyleLength(1);
-                overlay.style.height   = new StyleLength(19);
-                overlay.style.width    = new StyleLength(130);
-                overlay.style.right    = new StyleLength(180);
+                overlay.style.top      = new StyleLength(OverlayTopOffset);
+                overlay.style.height   = new StyleLength(OverlayHeight);
+                overlay.style.width    = new StyleLength(OverlayWidth);
+
+                // Initial position — will be recalculated dynamically.
+                overlay.style.right = new StyleLength(CalculateRightOffset(root.resolvedStyle.width));
+
+                // Recalculate position when the window resizes.
+                root.RegisterCallback<GeometryChangedEvent>(evt =>
+                {
+                    try
+                    {
+                        overlay.style.right = new StyleLength(
+                            CalculateRightOffset(evt.newRect.width));
+                    }
+                    catch { /* silent no-op */ }
+                });
+
+                // If our overlay is removed (domain reload, window rebuild),
+                // schedule a re-scan so we can re-inject.
+                overlay.RegisterCallback<DetachFromPanelEvent>(_ => ScheduleScan());
 
                 root.Add(overlay);
             }
             catch { /* silent no-op */ }
+        }
+
+        // ================================================================
+        //  Dynamic positioning
+        // ================================================================
+
+        /// <summary>
+        /// Calculates the <c>style.right</c> offset so the overlay sits on
+        /// top of the original play-mode dropdown.
+        ///
+        /// <para>The GameView toolbar layout (from DoToolbarGUI source):</para>
+        /// <code>
+        /// [LeftGroup] [FlexSpace1] [Dropdown 110px] [MiddleButtons] [FlexSpace2] [RightGroup]
+        /// </code>
+        ///
+        /// <para>The two FlexibleSpaces split remaining horizontal space equally.
+        /// We know RightGroup and MiddleButtons widths exactly (deterministic).
+        /// We estimate LeftGroup; any error there is halved by the flex split,
+        /// and the overlay's extra width (140 vs 110 px) absorbs the remainder.</para>
+        /// </summary>
+        private static float CalculateRightOffset(float windowWidth)
+        {
+            // Guard: if the window is too narrow for the toolbar, use a
+            // reasonable fallback so we don't get negative values.
+            if (windowWidth < 400f)
+                return 180f;
+
+            float middleGroupWidth = OriginalDropdownWidth + MiddleButtonsWidth;
+            float totalFixed = EstimatedLeftGroupWidth + middleGroupWidth + RightGroupWidth;
+            float totalFlex  = Mathf.Max(0f, windowWidth - totalFixed);
+            float eachFlex   = totalFlex / 2f;
+
+            // The dropdown's right edge distance from the window's right edge:
+            //   RightGroup + FlexSpace2 + MiddleButtons
+            float rightOffset = RightGroupWidth + eachFlex + MiddleButtonsWidth;
+
+            // Centre the wider overlay (140 px) over the original 110 px dropdown.
+            // Shift left by half the width difference.
+            rightOffset -= (OverlayWidth - OriginalDropdownWidth) / 2f;
+
+            return Mathf.Max(0f, rightOffset);
         }
 
         // ================================================================
@@ -180,7 +276,6 @@ namespace Shilo.FullscreenPlay.Editor
             int behavior        = GetBehavior(gameView);
             bool playFullscreen = FullscreenPlaySettings.PlayFullscreen;
 
-            // Determine the collapsed label.
             string label;
             if (playFullscreen)
                 label = "Play Fullscreen";
@@ -189,7 +284,7 @@ namespace Shilo.FullscreenPlay.Editor
             else
                 label = s_Labels[0];
 
-            var rect = new Rect(0, 0, 130, 19);
+            var rect = new Rect(0, 0, OverlayWidth, OverlayHeight);
 
             // The original dropdown is disabled while playing and not paused.
             using (new EditorGUI.DisabledScope(
@@ -208,11 +303,10 @@ namespace Shilo.FullscreenPlay.Editor
         {
             var menu = new GenericMenu();
 
-            // --- Original options ---
             for (int i = 0; i < s_Labels.Length; i++)
             {
-                int idx  = i;
-                bool on  = !playFullscreen && currentBehavior == i;
+                int idx = i;
+                bool on = !playFullscreen && currentBehavior == i;
                 menu.AddItem(new GUIContent(s_Labels[i]), on, () =>
                 {
                     try
@@ -226,7 +320,6 @@ namespace Shilo.FullscreenPlay.Editor
 
             menu.AddSeparator("");
 
-            // --- Our addition ---
             menu.AddItem(
                 new GUIContent("Play Fullscreen"),
                 playFullscreen,
