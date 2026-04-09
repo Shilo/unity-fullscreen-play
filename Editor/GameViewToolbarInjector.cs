@@ -207,7 +207,28 @@ namespace Shilo.FullscreenPlay.Editor
                 overlay.style.right = new StyleLength(CalculateRightOffset(root.resolvedStyle.width));
 
                 // Recalculate position when the window resizes.
-                root.RegisterCallback<GeometryChangedEvent>(evt =>
+                // We listen on the overlay (not root) so the callback is
+                // automatically removed when the overlay is removed from
+                // the hierarchy — no leak across re-injections.
+                overlay.RegisterCallback<GeometryChangedEvent>(evt =>
+                {
+                    try
+                    {
+                        // The overlay's own geometry doesn't change on window
+                        // resize (it's absolutely positioned), so read the
+                        // parent width instead.
+                        var parentWidth = overlay.parent?.resolvedStyle.width ?? 0f;
+                        if (parentWidth > 0f)
+                            overlay.style.right = new StyleLength(
+                                CalculateRightOffset(parentWidth));
+                    }
+                    catch { /* silent no-op */ }
+                });
+
+                // Also listen on root for the initial layout pass, since the
+                // overlay may not have resolved dimensions yet.
+                // Store the callback so RemoveAllOverlays can unregister it.
+                EventCallback<GeometryChangedEvent> rootCallback = evt =>
                 {
                     try
                     {
@@ -215,11 +236,16 @@ namespace Shilo.FullscreenPlay.Editor
                             CalculateRightOffset(evt.newRect.width));
                     }
                     catch { /* silent no-op */ }
-                });
+                };
+                root.RegisterCallback(rootCallback);
 
                 // If our overlay is removed (domain reload, window rebuild),
-                // schedule a re-scan so we can re-inject.
-                overlay.RegisterCallback<DetachFromPanelEvent>(_ => ScheduleScan());
+                // unregister the root callback and schedule a re-scan.
+                overlay.RegisterCallback<DetachFromPanelEvent>(_ =>
+                {
+                    root.UnregisterCallback(rootCallback);
+                    ScheduleScan();
+                });
 
                 root.Add(overlay);
             }

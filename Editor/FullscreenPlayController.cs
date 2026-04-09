@@ -54,7 +54,10 @@ namespace Shilo.FullscreenPlay.Editor
             switch (state)
             {
                 case PlayModeStateChange.EnteredPlayMode:
-                    if (FullscreenPlaySettings.PlayFullscreen)
+                    bool shouldFullscreen = FullscreenPlaySettings.PlayFullscreen || s_OneShotFullscreen;
+                    s_OneShotFullscreen = false;
+
+                    if (shouldFullscreen)
                     {
                         // Delay one frame so the GameView is fully initialised
                         EditorApplication.delayCall += () =>
@@ -91,6 +94,12 @@ namespace Shilo.FullscreenPlay.Editor
             return true;
         }
 
+        /// <summary>
+        /// One-shot flag: enter fullscreen on the next EnteredPlayMode without
+        /// permanently changing the PlayFullscreen preference.
+        /// </summary>
+        private static bool s_OneShotFullscreen;
+
         [MenuItem(MenuEnterNow, false, 161)]
         private static void EnterFullscreenNow()
         {
@@ -100,9 +109,10 @@ namespace Shilo.FullscreenPlay.Editor
             }
             else
             {
-                // Not playing yet – enable the toggle and start Play mode.
-                // The playModeStateChanged handler will enter fullscreen.
-                FullscreenPlaySettings.PlayFullscreen = true;
+                // Not playing yet – use a one-shot flag so we enter fullscreen
+                // on the next EnteredPlayMode without permanently enabling the
+                // auto-fullscreen preference.
+                s_OneShotFullscreen = true;
                 EditorApplication.isPlaying = true;
             }
         }
