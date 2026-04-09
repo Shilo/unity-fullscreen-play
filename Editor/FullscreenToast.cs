@@ -41,6 +41,22 @@ namespace Shilo.FullscreenPlay.Editor
             s_Instance.minSize = new Vector2(ToastWidth, ToastHeight);
             s_Instance.maxSize = new Vector2(ToastWidth, ToastHeight);
 
+#if UNITY_EDITOR_WIN
+            // Bring the toast above the fullscreen window. We use delayCall
+            // so the Win32 window has been created by the time we look it up.
+            EditorApplication.delayCall += () =>
+            {
+                if (s_Instance == null) return;
+                try
+                {
+                    s_Instance.Focus();
+                    var hwnd = FullscreenGameView.GetForegroundWindowHandle();
+                    FullscreenGameView.BringWindowToTop(hwnd);
+                }
+                catch { /* silent */ }
+            };
+#endif
+
             EditorApplication.update += s_Instance.Tick;
         }
 

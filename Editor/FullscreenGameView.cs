@@ -227,9 +227,11 @@ namespace Shilo.FullscreenPlay.Editor
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        private static readonly IntPtr HWND_TOP = IntPtr.Zero;
         private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
         private const uint SWP_SHOWWINDOW = 0x0040;
+        private const uint SWP_NOSIZE = 0x0001;
+        private const uint SWP_NOMOVE = 0x0002;
         private const int GWL_STYLE = -16;
         private const int WS_POPUP = unchecked((int)0x80000000);
         private const int WS_VISIBLE = 0x10000000;
@@ -266,6 +268,12 @@ namespace Shilo.FullscreenPlay.Editor
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
+        /// <summary>
+        /// Exposes GetForegroundWindow for use by FullscreenToast to find
+        /// its own HWND and bring it above the fullscreen window.
+        /// </summary>
+        internal static IntPtr GetForegroundWindowHandle() => GetForegroundWindow();
+
         private static void MakeWindowFullscreen(Rect rect)
         {
             s_WindowHandle = GetPopupWindowHandle();
@@ -280,18 +288,27 @@ namespace Shilo.FullscreenPlay.Editor
             int w = (int)(rect.width * scale);
             int h = (int)(rect.height * scale);
 
-            SetWindowPos(s_WindowHandle, HWND_TOPMOST, x, y, w, h, SWP_SHOWWINDOW);
+            // Use HWND_TOP (not HWND_TOPMOST) to place the window at the top
+            // of the z-order without pinning it there permanently. This covers
+            // the taskbar on initial show but allows alt-tab to bring other
+            // windows in front.
+            SetWindowPos(s_WindowHandle, HWND_TOP, x, y, w, h, SWP_SHOWWINDOW);
         }
 
         private static void RestoreWindow()
         {
-            if (s_WindowHandle == IntPtr.Zero) return;
-
-            // Remove topmost flag
-            SetWindowPos(s_WindowHandle, HWND_NOTOPMOST, 0, 0, 0, 0,
-                0x0001 /*SWP_NOSIZE*/ | 0x0002 /*SWP_NOMOVE*/);
-
             s_WindowHandle = IntPtr.Zero;
+        }
+
+        /// <summary>
+        /// Brings the given HWND to the top of the z-order (above the
+        /// fullscreen window) without pinning it permanently.
+        /// Used to ensure the toast popup appears above the game.
+        /// </summary>
+        internal static void BringWindowToTop(IntPtr hwnd)
+        {
+            if (hwnd == IntPtr.Zero) return;
+            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
 #endif
     }

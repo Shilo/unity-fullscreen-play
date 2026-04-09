@@ -177,14 +177,25 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static void OnGlobalEvent()
         {
-            if (!FullscreenGameView.IsFullscreen) return;
-
             var e = Event.current;
             if (e == null || e.type != EventType.KeyDown) return;
 
-            if (e.keyCode == KeyCode.Escape)
+            // Escape: exit fullscreen (only when fullscreen is active)
+            if (e.keyCode == KeyCode.Escape && FullscreenGameView.IsFullscreen)
             {
                 FullscreenGameView.ExitFullscreen();
+                e.Use();
+                return;
+            }
+
+            // F11: toggle fullscreen during play mode.
+            // The [Shortcut] attribute doesn't fire when the fullscreen
+            // GameView captures keyboard input, so we handle it here too.
+            if (e.keyCode == KeyCode.F11
+                && FullscreenPlaySettings.EnableHotkey
+                && EditorApplication.isPlaying)
+            {
+                FullscreenGameView.ToggleFullscreen();
                 e.Use();
             }
         }
