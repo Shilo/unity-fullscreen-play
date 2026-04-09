@@ -45,6 +45,12 @@ namespace Shilo.FullscreenPlay.Editor
             get => EditorPrefs.GetBool(Prefix + "EnableHotkey", true);
             set => EditorPrefs.SetBool(Prefix + "EnableHotkey", value);
         }
+
+        public static bool ShowToastOnRefocus
+        {
+            get => EditorPrefs.GetBool(Prefix + "ShowToastOnRefocus", true);
+            set => EditorPrefs.SetBool(Prefix + "ShowToastOnRefocus", value);
+        }
     }
 
     /// <summary>
@@ -125,6 +131,14 @@ namespace Shilo.FullscreenPlay.Editor
                         FullscreenPlaySettings.ToastDuration, 1f, 10f);
                     if (EditorGUI.EndChangeCheck())
                         FullscreenPlaySettings.ToastDuration = toastDuration;
+
+                    EditorGUI.BeginChangeCheck();
+                    bool showOnRefocus = EditorGUILayout.Toggle(
+                        new GUIContent("Show on Refocus",
+                            "Re-show the toast when the fullscreen window regains focus (e.g. after alt-tab)"),
+                        FullscreenPlaySettings.ShowToastOnRefocus);
+                    if (EditorGUI.EndChangeCheck())
+                        FullscreenPlaySettings.ShowToastOnRefocus = showOnRefocus;
                 }
             }
         }

@@ -15,6 +15,7 @@ namespace Shilo.FullscreenPlay.Editor
     {
         private static EditorWindow s_FullscreenWindow;
         private static Rect s_FullscreenRect;
+        private static bool s_HadFocus;
 
         public static bool IsFullscreen => s_FullscreenWindow != null;
 
@@ -82,12 +83,17 @@ namespace Shilo.FullscreenPlay.Editor
                     FullscreenToast.Show(s_FullscreenRect);
                 };
             }
+
+            // Start tracking focus for toast-on-refocus
+            s_HadFocus = true;
+            EditorApplication.update += TrackFocus;
         }
 
         public static void ExitFullscreen()
         {
             if (!IsFullscreen) return;
 
+            EditorApplication.update -= TrackFocus;
             FullscreenToast.Hide();
 
 #if UNITY_EDITOR_WIN
@@ -103,6 +109,25 @@ namespace Shilo.FullscreenPlay.Editor
             s_FullscreenRect = Rect.zero;
         }
 
+        private static void TrackFocus()
+        {
+            if (!IsFullscreen) return;
+
+            bool hasFocus = EditorWindow.focusedWindow == s_FullscreenWindow;
+
+            if (hasFocus && !s_HadFocus)
+            {
+                // Window just regained focus (e.g. after alt-tab back)
+                if (FullscreenPlaySettings.ShowToast
+                    && FullscreenPlaySettings.ShowToastOnRefocus)
+                {
+                    FullscreenToast.ResetTimer(s_FullscreenRect);
+                }
+            }
+
+            s_HadFocus = hasFocus;
+        }
+
         public static void ToggleFullscreen()
         {
             if (IsFullscreen)
@@ -116,6 +141,7 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         public static void Cleanup()
         {
+            EditorApplication.update -= TrackFocus;
             if (s_FullscreenWindow != null)
             {
                 try { s_FullscreenWindow.Close(); }
@@ -123,6 +149,7 @@ namespace Shilo.FullscreenPlay.Editor
             }
             s_FullscreenWindow = null;
             s_FullscreenRect = Rect.zero;
+            s_HadFocus = false;
         }
 
         private static Rect GetTargetScreenRect()

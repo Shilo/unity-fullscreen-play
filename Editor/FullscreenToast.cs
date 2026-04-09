@@ -84,6 +84,35 @@ namespace Shilo.FullscreenPlay.Editor
         }
 #endif
 
+        /// <summary>
+        /// Resets the toast timer so it replays from the beginning.
+        /// If the toast is already hidden, re-shows it. If it's mid-fade,
+        /// resets to fully opaque and restarts the duration.
+        /// </summary>
+        public static void ResetTimer(Rect screenRect)
+        {
+            if (s_Instance != null)
+            {
+                // Already showing — just reset the start time
+                s_Instance._startTime = EditorApplication.timeSinceStartup;
+
+#if UNITY_EDITOR_WIN
+                try
+                {
+                    var hwnd = FindWindowByTitle("FullscreenPlayToast");
+                    if (hwnd != System.IntPtr.Zero)
+                        FullscreenGameView.BringWindowToTop(hwnd);
+                }
+                catch { /* silent */ }
+#endif
+            }
+            else
+            {
+                // Toast was already hidden — re-show it
+                Show(screenRect);
+            }
+        }
+
         public static void Hide()
         {
             if (s_Instance != null)
