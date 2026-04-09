@@ -155,8 +155,12 @@ unity-fullscreen-play/
     ├── FullscreenGameView.cs                 # Core fullscreen window management
     ├── FullscreenPlayController.cs           # Menu items, shortcuts, play mode hooks
     ├── FullscreenPlaySettings.cs             # Settings + preferences UI
-    ├── FullscreenToast.cs                    # Toast notification overlay
-    └── GameViewToolbarInjector.cs            # Dropdown injection into GameView toolbar
+    ├── FullscreenToast.cs                    # Toast notification overlay (Chrome-style keycaps)
+    ├── GameViewToolbarInjector.cs            # Dropdown injection into GameView toolbar
+    ├── I18n.cs                               # File-based internationalization
+    └── Locales/
+        ├── en.json                           # English translations (base/fallback)
+        └── de.json                           # German translations
 ```
 
 **Why editor-only:** All code runs exclusively in the Unity Editor. The `includePlatforms: ["Editor"]` in the assembly definition ensures none of this code is included in player builds. There is no `Runtime/` folder because the package has zero runtime footprint.
@@ -209,13 +213,13 @@ EditorApplication.playModeStateChanged
 ```
 
 **Menu items (Tools/ — standard for third-party plugins):**
-- `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+F11) - toggles fullscreen during play; starts play+fullscreen if not playing
+- `Tools > Fullscreen Play > Toggle Fullscreen` (Ctrl+F11) - toggles fullscreen during play (greyed out when not playing)
 - `Tools > Fullscreen Play > Auto-Fullscreen on Play` - persistent toggle with checkmark
 - `Tools > Fullscreen Play > Settings...` - opens Preferences panel
 
 **Edit menu (fallback for discoverability):**
 - `Edit > Fullscreen Play > Play Fullscreen` - same toggle as Tools > Auto-Fullscreen
-- `Edit > Fullscreen Play > Enter Fullscreen Now` - same as Tools > Toggle Fullscreen
+- `Edit > Fullscreen Play > Enter Fullscreen Now` - same as Tools > Toggle Fullscreen (greyed out when not playing)
 - `Edit > Fullscreen Play > Settings...` - opens Preferences panel
 
 **Keyboard handling:**
@@ -253,11 +257,12 @@ The `FullscreenPlaySettingsProvider` class implements a `SettingsProvider` regis
 
 A small borderless popup (`EditorWindow` via `ShowPopup()`) that displays "Press Esc or F11 to exit fullscreen" at the top-center of the screen. It fades out after the configured duration.
 
-**Rendering:**
-- Background: dark semi-transparent rect (`rgba(0.12, 0.12, 0.12, 0.92)`)
-- Border: subtle 1px line (`rgba(0.35, 0.35, 0.35, 0.6)`)
-- Text: white, centered, 13pt
+**Rendering (Chrome-style):**
+- Dark background with subtle border
+- "Exit fullscreen" label followed by keycap-styled key boxes (`[F11]` `[Esc]`)
+- Keycaps: darker background, lighter border, bottom shadow for 3D depth
 - Fade: linear alpha reduction from 65% to 100% of duration
+- Localized via `I18n.Tr("exit_fullscreen")`
 
 **Why a separate EditorWindow:** Since the fullscreen GameView is an internal Unity type, we cannot override its `OnGUI` to draw overlays. A separate popup window layered on top is the only clean approach. The toast is shown with a `delayCall` to ensure it appears above the fullscreen window, then focus is returned to the GameView so game input works.
 
@@ -506,7 +511,7 @@ Without a tag, Unity resolves `HEAD` of the default branch, which may include un
 - Graceful fallbacks when reflection targets are missing
 
 **The implementation is focused:**
-- 5 C# files, ~1,100 lines of code total
+- 6 C# files + 2 JSON locale files
 - Zero runtime footprint (editor-only assembly)
 - No dependencies beyond Unity itself
 - Installs via a single Git URL

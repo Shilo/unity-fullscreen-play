@@ -9,12 +9,13 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **Tools menu** — Tools > Fullscreen Play with toggle fullscreen (Ctrl+F11), auto-play setting, and settings
 - **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
-- **Ctrl+F11** — toggle fullscreen or start play+fullscreen from anywhere
+- **Ctrl+F11** — toggle fullscreen during Play mode (greyed out when not playing)
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play
 - **Clean enable/disable** — no leaks or stale state when toggling the package
+- **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
 
 ## Requirements
@@ -58,10 +59,10 @@ Add this line to your project's `Packages/manifest.json`:
 
 You can also enable this from the Game view toolbar dropdown (select "Play Fullscreen") or via **Edit > Fullscreen Play > Play Fullscreen**.
 
-### Manual fullscreen
-- Press **Ctrl+F11** to toggle fullscreen (starts Play if not already playing)
-- Press **F11** during Play mode to toggle fullscreen
-- Or use **Tools > Fullscreen Play > Toggle Fullscreen**
+### Manual fullscreen (during Play mode)
+- Press **F11** to toggle fullscreen
+- Press **Ctrl+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen**
+- These are greyed out when not in Play mode
 
 ### Settings
 Open **Edit > Preferences > Fullscreen Play** to configure:
