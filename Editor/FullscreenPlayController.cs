@@ -76,7 +76,7 @@ namespace Shilo.FullscreenPlay.Editor
 
         // ---- Menu items (Tools/ — standard for third-party plugins) ----
 
-        private const string ToolsToggle    = "Tools/Fullscreen Play/Toggle Fullscreen %F11";
+        private const string ToolsToggle    = "Tools/Fullscreen Play/Toggle Fullscreen";
         private const string ToolsAuto      = "Tools/Fullscreen Play/Auto-Fullscreen on Play";
         private const string ToolsSettings  = "Tools/Fullscreen Play/Settings...";
 

@@ -54,8 +54,9 @@ namespace Shilo.FullscreenPlay.Editor
                 // Always load English as the base/fallback
                 LoadJson(Path.Combine(localesDir, "en.json"));
 
-                // Load the current editor language on top
-                var lang = LocalizationDatabase.currentEditorLanguage;
+                // Detect the editor language. LocalizationDatabase is internal
+                // in some Unity versions, so fall back to reading the pref directly.
+                var lang = GetEditorLanguage();
                 if (lang != SystemLanguage.English
                     && s_LangCodes.TryGetValue(lang, out var code))
                 {
@@ -77,6 +78,32 @@ namespace Shilo.FullscreenPlay.Editor
         public static string Tr(string key)
         {
             return s_Strings.TryGetValue(key, out var value) ? value : key;
+        }
+
+        private static SystemLanguage GetEditorLanguage()
+        {
+            try
+            {
+                // Try the public API first (available in some Unity versions)
+                var type = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.LocalizationDatabase");
+                if (type != null)
+                {
+                    var prop = type.GetProperty("currentEditorLanguage",
+                        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+                    if (prop != null)
+                        return (SystemLanguage)prop.GetValue(null);
+                }
+            }
+            catch { /* silent */ }
+
+            // Fallback: read the editor_language pref directly
+            // This is an int matching the SystemLanguage enum
+            try
+            {
+                int langInt = EditorPrefs.GetInt("editor_language", (int)SystemLanguage.English);
+                return (SystemLanguage)langInt;
+            }
+            catch { return SystemLanguage.English; }
         }
 
         private static void LoadJson(string path)
