@@ -132,6 +132,11 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         public static void Cleanup()
         {
+            if (s_FullscreenWindow != null)
+            {
+                try { s_FullscreenWindow.Close(); }
+                catch { /* silent — window may already be destroyed */ }
+            }
             s_FullscreenWindow = null;
             s_FullscreenRect = Rect.zero;
         }
