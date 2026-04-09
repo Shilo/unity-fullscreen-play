@@ -70,20 +70,17 @@ namespace Shilo.FullscreenPlay.Editor
                         "Automatically enter fullscreen when entering Play mode"),
                     FullscreenPlaySettings.PlayFullscreen);
 
-                FullscreenPlaySettings.Mode = (FullscreenMode)EditorGUILayout.EnumPopup(
-                    new GUIContent("Fullscreen Mode",
-                        "Fullscreen Windowed: borderless window covering the screen.\n" +
-                        "Exclusive Fullscreen: takes over the display (Windows only, not yet implemented)."),
-                    FullscreenPlaySettings.Mode);
+                using (new EditorGUI.DisabledGroupScope(true))
+                {
+                    EditorGUILayout.EnumPopup(
+                        new GUIContent("Fullscreen Mode",
+                            "Fullscreen Windowed: borderless window covering the screen.\n" +
+                            "Exclusive Fullscreen is planned for a future release."),
+                        FullscreenMode.FullscreenWindowed);
+                }
 
                 if (FullscreenPlaySettings.Mode == FullscreenMode.ExclusiveFullscreen)
-                {
-                    EditorGUILayout.HelpBox(
-                        "Exclusive Fullscreen is not yet implemented. " +
-                        "Fullscreen Windowed will be used instead.\n" +
-                        "This option will take over the display in a future release.",
-                        MessageType.Warning);
-                }
+                    FullscreenPlaySettings.Mode = FullscreenMode.FullscreenWindowed;
 
                 EditorGUILayout.Space(10);
                 EditorGUILayout.LabelField("Hotkey", EditorStyles.boldLabel);

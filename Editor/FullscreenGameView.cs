@@ -59,6 +59,13 @@ namespace Shilo.FullscreenPlay.Editor
             // ShowPopup creates a borderless, chromeless window
             s_FullscreenWindow.ShowPopup();
             s_FullscreenWindow.position = s_FullscreenRect;
+
+#if UNITY_EDITOR_WIN
+            // Set a unique title now so the Win32 window title has time to
+            // propagate before MakeWindowFullscreen runs on the next frame.
+            s_FullscreenWindow.titleContent = new GUIContent("FullscreenPlayPopup");
+#endif
+
             s_FullscreenWindow.Focus();
 
             // Copy target display and resolution settings from the existing GameView
@@ -247,19 +254,15 @@ namespace Shilo.FullscreenPlay.Editor
             }
 
             // Fallback: use GetForegroundWindow immediately after Focus().
-            // This is less reliable but works when the title approach fails.
-            return GetForegroundWindowFallback();
+            // Less reliable but works when the title approach fails.
+            return GetForegroundWindow();
         }
 
-        [DllImport("user32.dll", EntryPoint = "GetForegroundWindow")]
-        private static extern IntPtr GetForegroundWindowFallback();
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
 
         private static void MakeWindowFullscreen(Rect rect)
         {
-            // Tag the window with a unique title so we can find its HWND
-            if (s_FullscreenWindow != null)
-                s_FullscreenWindow.titleContent = new GUIContent("FullscreenPlayPopup");
-
             s_WindowHandle = GetPopupWindowHandle();
             if (s_WindowHandle == IntPtr.Zero) return;
 
