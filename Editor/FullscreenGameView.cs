@@ -121,20 +121,8 @@ namespace Shilo.FullscreenPlay.Editor
             }
         }
 
-        /// <summary>
-        /// Debounce guard: multiple systems can handle F11 (MenuItem shortcut,
-        /// [Shortcut] attribute, globalEventHandler). Although globalEventHandler
-        /// calls Event.Use() to consume the event, this guard prevents any
-        /// residual double-trigger within the same frame from toggling twice.
-        /// </summary>
-        private static double s_LastToggleTime;
-
         public static void ToggleFullscreen()
         {
-            double now = EditorApplication.timeSinceStartup;
-            if (now - s_LastToggleTime < 0.1) return;
-            s_LastToggleTime = now;
-
             if (IsFullscreen)
                 ExitFullscreen();
             else
