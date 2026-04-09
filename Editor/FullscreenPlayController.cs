@@ -81,11 +81,6 @@ namespace Shilo.FullscreenPlay.Editor
         private const string ToolsSettings  = "Tools/Fullscreen Play/Settings...";
         private const string ToolsUpdate    = "Tools/Fullscreen Play/Check for Update...";
 
-        // Edit/ menu entries (mirrors Tools/ for discoverability)
-        private const string EditAuto       = "Edit/Fullscreen Play/Auto-Fullscreen on Play";
-        private const string EditToggle     = "Edit/Fullscreen Play/Toggle Fullscreen %#F11";
-        private const string EditSettings   = "Edit/Fullscreen Play/Settings...";
-        private const string EditUpdate     = "Edit/Fullscreen Play/Check for Update...";
 
         // --- Tools menu ---
 
@@ -128,45 +123,6 @@ namespace Shilo.FullscreenPlay.Editor
             SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
         }
 
-        // --- Edit menu (mirrors Tools/ for discoverability) ---
-
-        [MenuItem(EditAuto, false, 10100)]
-        private static void EditToggleAuto()
-        {
-            FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
-        }
-
-        [MenuItem(EditAuto, true)]
-        private static bool ValidateEditToggleAuto()
-        {
-            Menu.SetChecked(EditAuto, FullscreenPlaySettings.PlayFullscreen);
-            return true;
-        }
-
-        [MenuItem(EditToggle, false, 10101)]
-        private static void EditToggleFullscreen()
-        {
-            if (!EditorApplication.isPlaying) return;
-            FullscreenGameView.ToggleFullscreen();
-        }
-
-        [MenuItem(EditToggle, true)]
-        private static bool ValidateEditToggleFullscreen()
-        {
-            return EditorApplication.isPlaying;
-        }
-
-        [MenuItem(EditUpdate, false, 10200)]
-        private static void EditCheckForUpdate()
-        {
-            PackageUpdater.CheckForUpdate();
-        }
-
-        [MenuItem(EditSettings, false, 10201)]
-        private static void EditOpenSettings()
-        {
-            SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
-        }
 
         // ---- Shortcut (F11 by default, rebindable via Edit > Shortcuts) ----
 
