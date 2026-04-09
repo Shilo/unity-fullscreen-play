@@ -73,22 +73,16 @@ namespace Shilo.FullscreenPlay.Editor
                 FullscreenPlaySettings.Mode = (FullscreenMode)EditorGUILayout.EnumPopup(
                     new GUIContent("Fullscreen Mode",
                         "Fullscreen Windowed: borderless window covering the screen.\n" +
-                        "Exclusive Fullscreen: takes over the display (Windows only)."),
+                        "Exclusive Fullscreen: takes over the display (Windows only, not yet implemented)."),
                     FullscreenPlaySettings.Mode);
 
                 if (FullscreenPlaySettings.Mode == FullscreenMode.ExclusiveFullscreen)
                 {
-#if !UNITY_EDITOR_WIN
                     EditorGUILayout.HelpBox(
-                        "Exclusive Fullscreen is only supported on Windows. " +
-                        "Falling back to Fullscreen Windowed on this platform.",
+                        "Exclusive Fullscreen is not yet implemented. " +
+                        "Fullscreen Windowed will be used instead.\n" +
+                        "This option will take over the display in a future release.",
                         MessageType.Warning);
-#else
-                    EditorGUILayout.HelpBox(
-                        "Exclusive Fullscreen changes the display resolution. " +
-                        "Use with caution in the editor.",
-                        MessageType.Info);
-#endif
                 }
 
                 EditorGUILayout.Space(10);

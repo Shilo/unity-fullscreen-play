@@ -206,17 +206,14 @@ namespace Shilo.FullscreenPlay.Editor
 
 #if UNITY_EDITOR_WIN
         [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
         private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
             int x, int y, int cx, int cy, uint uFlags);
 
         [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
         [DllImport("user32.dll")]
-        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
@@ -226,15 +223,45 @@ namespace Shilo.FullscreenPlay.Editor
         private const int WS_VISIBLE = 0x10000000;
 
         private static IntPtr s_WindowHandle;
-        private static int s_OriginalStyle;
+
+        /// <summary>
+        /// Gets the native window handle for the fullscreen popup.
+        /// Uses the window title set on the EditorWindow to find the
+        /// correct HWND, avoiding the <c>GetForegroundWindow</c> race
+        /// where another window could steal focus between frames.
+        /// </summary>
+        private static IntPtr GetPopupWindowHandle()
+        {
+            if (s_FullscreenWindow == null) return IntPtr.Zero;
+
+            // Focus first to ensure the window is visible and foreground
+            s_FullscreenWindow.Focus();
+
+            // Use the window title to find the HWND reliably.
+            // EditorWindow popup titles map to Win32 window titles.
+            string title = s_FullscreenWindow.titleContent.text;
+            if (!string.IsNullOrEmpty(title))
+            {
+                var hwnd = FindWindow(null, title);
+                if (hwnd != IntPtr.Zero) return hwnd;
+            }
+
+            // Fallback: use GetForegroundWindow immediately after Focus().
+            // This is less reliable but works when the title approach fails.
+            return GetForegroundWindowFallback();
+        }
+
+        [DllImport("user32.dll", EntryPoint = "GetForegroundWindow")]
+        private static extern IntPtr GetForegroundWindowFallback();
 
         private static void MakeWindowFullscreen(Rect rect)
         {
-            s_WindowHandle = GetForegroundWindow();
-            if (s_WindowHandle == IntPtr.Zero) return;
+            // Tag the window with a unique title so we can find its HWND
+            if (s_FullscreenWindow != null)
+                s_FullscreenWindow.titleContent = new GUIContent("FullscreenPlayPopup");
 
-            // Save original window style
-            s_OriginalStyle = GetWindowLong(s_WindowHandle, GWL_STYLE);
+            s_WindowHandle = GetPopupWindowHandle();
+            if (s_WindowHandle == IntPtr.Zero) return;
 
             // Set to popup style (removes all chrome) and position covering full screen
             SetWindowLong(s_WindowHandle, GWL_STYLE, WS_POPUP | WS_VISIBLE);
@@ -257,7 +284,6 @@ namespace Shilo.FullscreenPlay.Editor
                 0x0001 /*SWP_NOSIZE*/ | 0x0002 /*SWP_NOMOVE*/);
 
             s_WindowHandle = IntPtr.Zero;
-            s_OriginalStyle = 0;
         }
 #endif
     }

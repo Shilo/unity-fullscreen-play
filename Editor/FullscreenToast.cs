@@ -19,7 +19,7 @@ namespace Shilo.FullscreenPlay.Editor
         private const float ToastWidth = 340f;
         private const float ToastHeight = 44f;
         private const float TopOffset = 30f;
-        private const float CornerRadius = 8f;
+
 
         public static void Show(Rect screenRect)
         {

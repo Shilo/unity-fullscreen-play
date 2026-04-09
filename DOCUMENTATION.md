@@ -496,7 +496,7 @@ Without a tag, Unity resolves `HEAD` of the default branch, which may include un
 - Graceful fallbacks when reflection targets are missing
 
 **The implementation is focused:**
-- 5 C# files, ~750 lines of code total
+- 5 C# files, ~1,100 lines of code total
 - Zero runtime footprint (editor-only assembly)
 - No dependencies beyond Unity itself
 - Installs via a single Git URL
