@@ -130,7 +130,7 @@ namespace Shilo.FullscreenPlay.Editor
 
         // --- Edit menu (mirrors Tools/ for discoverability) ---
 
-        [MenuItem(EditAuto, false, 100)]
+        [MenuItem(EditAuto, false, 251)]
         private static void EditToggleAuto()
         {
             FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
@@ -143,7 +143,7 @@ namespace Shilo.FullscreenPlay.Editor
             return true;
         }
 
-        [MenuItem(EditToggle, false, 101)]
+        [MenuItem(EditToggle, false, 252)]
         private static void EditToggleFullscreen()
         {
             if (!EditorApplication.isPlaying) return;
@@ -156,13 +156,13 @@ namespace Shilo.FullscreenPlay.Editor
             return EditorApplication.isPlaying;
         }
 
-        [MenuItem(EditSettings, false, 200)]
+        [MenuItem(EditSettings, false, 260)]
         private static void EditOpenSettings()
         {
             SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
         }
 
-        [MenuItem(EditUpdate, false, 201)]
+        [MenuItem(EditUpdate, false, 261)]
         private static void EditCheckForUpdate()
         {
             PackageUpdater.CheckForUpdate();
