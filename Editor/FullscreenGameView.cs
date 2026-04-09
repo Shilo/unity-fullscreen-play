@@ -61,43 +61,44 @@ namespace Shilo.FullscreenPlay.Editor
             s_FullscreenWindow.position = s_FullscreenRect;
 
 #if UNITY_EDITOR_WIN
-            // Set a unique title now so the Win32 window title has time to
-            // propagate before MakeWindowFullscreen runs on the next frame.
             s_FullscreenWindow.titleContent = new GUIContent("FullscreenPlayPopup");
 #endif
-
-            s_FullscreenWindow.Focus();
 
             // Copy target display and resolution settings from the existing GameView
             CopyGameViewSettings(s_FullscreenWindow);
 
 #if UNITY_EDITOR_WIN
-            // On Windows, ensure the popup covers the taskbar
+            // Apply Win32 fullscreen styling immediately on the next frame.
+            // Then show toast on the frame after that (so it layers on top).
             EditorApplication.delayCall += () =>
             {
                 if (s_FullscreenWindow == null) return;
                 s_FullscreenWindow.Focus();
                 MakeWindowFullscreen(s_FullscreenRect);
+
+                // Toast on the next frame after fullscreen is applied
+                if (FullscreenPlaySettings.ShowToast)
+                {
+                    EditorApplication.delayCall += () =>
+                    {
+                        if (!IsFullscreen) return;
+                        FullscreenToast.Show(s_FullscreenRect);
+                    };
+                }
             };
-#endif
+#else
+            s_FullscreenWindow.Focus();
 
             // Show toast notification
             if (FullscreenPlaySettings.ShowToast)
             {
-                // Delay slightly so the toast appears on top of the fullscreen window
                 EditorApplication.delayCall += () =>
                 {
                     if (!IsFullscreen) return;
                     FullscreenToast.Show(s_FullscreenRect);
-
-                    // Return focus to the game view so input works
-                    EditorApplication.delayCall += () =>
-                    {
-                        if (s_FullscreenWindow != null)
-                            s_FullscreenWindow.Focus();
-                    };
                 };
             }
+#endif
         }
 
         public static void ExitFullscreen()
