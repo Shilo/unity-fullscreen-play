@@ -4,8 +4,9 @@ using UnityEngine;
 namespace Shilo.FullscreenPlay.Editor
 {
     /// <summary>
-    /// A small borderless popup that shows "Press Esc or F11 to exit fullscreen"
-    /// and fades out after a configurable duration.
+    /// Chrome-style toast notification that shows keycap hints for exiting
+    /// fullscreen. Renders "Exit fullscreen [F11] [Esc]" with styled key
+    /// caps and fades out after a configurable duration.
     /// </summary>
     internal class FullscreenToast : EditorWindow
     {
@@ -13,14 +14,21 @@ namespace Shilo.FullscreenPlay.Editor
 
         private double _startTime;
         private float _duration;
-        private string _message;
+        private string[] _keys;
         private GUIStyle _labelStyle;
+        private GUIStyle _keyStyle;
 
-        private const float FadeStart = 0.65f; // start fading at 65% of duration
-        private const float ToastWidth = 340f;
-        private const float ToastHeight = 44f;
+        private const float FadeStart = 0.65f;
+        private const float ToastWidth = 360f;
+        private const float ToastHeight = 40f;
         private const float TopOffset = 30f;
 
+        // Keycap sizing
+        private const float KeyPadH = 10f;  // horizontal padding inside keycap
+        private const float KeyPadV = 4f;   // vertical padding inside keycap
+        private const float KeySpacing = 6f; // space between keycaps
+        private const float KeyHeight = 24f;
+        private const float TextKeyGap = 14f; // gap between label text and first keycap
 
         public static void Show(Rect screenRect)
         {
@@ -30,8 +38,11 @@ namespace Shilo.FullscreenPlay.Editor
             s_Instance._startTime = EditorApplication.timeSinceStartup;
             s_Instance._duration = FullscreenPlaySettings.ToastDuration;
 
-            string exitKeys = FullscreenPlaySettings.EnableHotkey ? "Esc  or  F11" : "Esc";
-            s_Instance._message = $"Press  {exitKeys}  to exit fullscreen";
+            // Build key list
+            if (FullscreenPlaySettings.EnableHotkey)
+                s_Instance._keys = new[] { "F11", "Esc" };
+            else
+                s_Instance._keys = new[] { "Esc" };
 
             float x = screenRect.x + (screenRect.width - ToastWidth) / 2f;
             float y = screenRect.y + TopOffset;
@@ -42,16 +53,19 @@ namespace Shilo.FullscreenPlay.Editor
             s_Instance.maxSize = new Vector2(ToastWidth, ToastHeight);
 
 #if UNITY_EDITOR_WIN
-            // Bring the toast above the fullscreen window. We use delayCall
-            // so the Win32 window has been created by the time we look it up.
+            // Set a unique title so we can find the toast's own HWND
+            s_Instance.titleContent = new GUIContent("FullscreenPlayToast");
+
             EditorApplication.delayCall += () =>
             {
                 if (s_Instance == null) return;
                 try
                 {
-                    s_Instance.Focus();
-                    var hwnd = FullscreenGameView.GetForegroundWindowHandle();
-                    FullscreenGameView.BringWindowToTop(hwnd);
+                    // Find the toast HWND by its unique title — not
+                    // GetForegroundWindow, which would return the GameView.
+                    var hwnd = FindWindowByTitle("FullscreenPlayToast");
+                    if (hwnd != System.IntPtr.Zero)
+                        FullscreenGameView.BringWindowToTop(hwnd);
                 }
                 catch { /* silent */ }
             };
@@ -59,6 +73,16 @@ namespace Shilo.FullscreenPlay.Editor
 
             EditorApplication.update += s_Instance.Tick;
         }
+
+#if UNITY_EDITOR_WIN
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        private static extern System.IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        private static System.IntPtr FindWindowByTitle(string title)
+        {
+            return FindWindow(null, title);
+        }
+#endif
 
         public static void Hide()
         {
@@ -93,25 +117,69 @@ namespace Shilo.FullscreenPlay.Editor
 
             var fullRect = new Rect(0, 0, position.width, position.height);
 
-            // Background
-            EditorGUI.DrawRect(fullRect, new Color(0.12f, 0.12f, 0.12f, 0.92f * alpha));
+            // Background — dark, semi-transparent
+            EditorGUI.DrawRect(fullRect, new Color(0.11f, 0.11f, 0.11f, 0.94f * alpha));
 
-            // Subtle border
-            DrawBorder(fullRect, new Color(0.35f, 0.35f, 0.35f, 0.6f * alpha));
+            // Border — subtle
+            DrawBorder(fullRect, new Color(0.3f, 0.3f, 0.3f, 0.5f * alpha));
 
-            // Text — cache the style, only update alpha each frame
+            // Ensure styles are cached
             if (_labelStyle == null)
             {
                 _labelStyle = new GUIStyle(EditorStyles.label)
                 {
-                    alignment = TextAnchor.MiddleCenter,
+                    alignment = TextAnchor.MiddleLeft,
                     fontSize = 13,
                     fontStyle = FontStyle.Normal
                 };
             }
-            _labelStyle.normal.textColor = new Color(0.9f, 0.9f, 0.9f, alpha);
 
-            GUI.Label(fullRect, _message, _labelStyle);
+            if (_keyStyle == null)
+            {
+                _keyStyle = new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontSize = 11,
+                    fontStyle = FontStyle.Bold
+                };
+            }
+
+            // Layout: [padding] [label text] [gap] [key1] [space] [key2] [padding]
+            float contentY = (fullRect.height - KeyHeight) / 2f;
+            float cursorX = 16f; // left padding
+
+            // Label text
+            _labelStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f, alpha);
+            var labelContent = new GUIContent("Exit fullscreen");
+            float labelWidth = _labelStyle.CalcSize(labelContent).x;
+            GUI.Label(new Rect(cursorX, 0, labelWidth, fullRect.height), labelContent, _labelStyle);
+            cursorX += labelWidth + TextKeyGap;
+
+            // Keycaps
+            _keyStyle.normal.textColor = new Color(0.92f, 0.92f, 0.92f, alpha);
+            foreach (var key in _keys)
+            {
+                float keyTextWidth = _keyStyle.CalcSize(new GUIContent(key)).x;
+                float keyWidth = keyTextWidth + KeyPadH * 2f;
+
+                var keyRect = new Rect(cursorX, contentY, keyWidth, KeyHeight);
+
+                // Keycap background — slightly lighter than toast bg
+                EditorGUI.DrawRect(keyRect, new Color(0.22f, 0.22f, 0.22f, 0.95f * alpha));
+
+                // Keycap border — lighter edge for 3D effect
+                DrawBorder(keyRect, new Color(0.45f, 0.45f, 0.45f, 0.7f * alpha));
+
+                // Bottom shadow line for depth
+                EditorGUI.DrawRect(
+                    new Rect(keyRect.x, keyRect.yMax - 2, keyRect.width, 2),
+                    new Color(0.08f, 0.08f, 0.08f, 0.6f * alpha));
+
+                // Key label
+                GUI.Label(keyRect, key, _keyStyle);
+
+                cursorX += keyWidth + KeySpacing;
+            }
         }
 
         private static void DrawBorder(Rect rect, Color color)
