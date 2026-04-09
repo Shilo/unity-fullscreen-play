@@ -6,10 +6,10 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 
 ## Features
 
-- **Tools menu** — Tools > Fullscreen Play with toggle fullscreen (Ctrl+F11), auto-play setting, and settings
+- **Tools menu** — Tools > Fullscreen Play with toggle fullscreen (Ctrl+Shift+F11), auto-play setting, and settings
 - **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
-- **Ctrl+F11** — toggle fullscreen during Play mode (greyed out when not playing)
+- **Ctrl+Shift+F11** — toggle fullscreen during Play mode (greyed out when not playing)
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
@@ -61,7 +61,7 @@ You can also enable this from the Game view toolbar dropdown (select "Play Fulls
 
 ### Manual fullscreen (during Play mode)
 - Press **F11** to toggle fullscreen
-- Press **Ctrl+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen**
+- Press **Ctrl+Shift+F11** or use **Tools > Fullscreen Play > Toggle Fullscreen**
 - These are greyed out when not in Play mode
 
 ### Settings

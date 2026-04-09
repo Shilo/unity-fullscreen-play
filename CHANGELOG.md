@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Tools > Fullscreen Play menu (standard third-party plugin location) with Toggle Fullscreen (Ctrl+F11), Auto-Fullscreen on Play, and Settings
+- Tools > Fullscreen Play menu (standard third-party plugin location) with Toggle Fullscreen (Ctrl+Shift+F11), Auto-Fullscreen on Play, and Settings
 - Chrome-style toast notification with keycap-styled key hints (`[F11]` `[Esc]`)
 - Internationalization (i18n) — English and German, extensible via JSON files in `Editor/Locales/`
 
