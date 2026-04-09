@@ -2,16 +2,6 @@ name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: 'Version bump type'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 permissions:
   contents: write
@@ -37,22 +27,14 @@ jobs:
           current="${{ steps.current.outputs.version }}"
           IFS='.' read -r major minor patch <<< "$current"
 
-          case "${{ inputs.version_bump }}" in
-            major)
-              major=$((major + 1))
-              minor=0
-              patch=0
-              ;;
-            minor)
-              minor=$((minor + 1))
-              patch=0
-              ;;
-            patch)
-              patch=$((patch + 1))
-              ;;
-          esac
+          # Always bump minor. When minor exceeds 9, bump major and reset.
+          minor=$((minor + 1))
+          if [ "$minor" -gt 9 ]; then
+            major=$((major + 1))
+            minor=0
+          fi
 
-          new_version="${major}.${minor}.${patch}"
+          new_version="${major}.${minor}.0"
           echo "version=$new_version" >> $GITHUB_OUTPUT
 
       - name: Update package.json version
