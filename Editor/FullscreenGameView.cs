@@ -53,6 +53,9 @@ namespace Shilo.FullscreenPlay.Editor
                 return;
             }
 
+            // Hide the GameView toolbar (display/resolution selectors) via reflection
+            HideToolbar(s_FullscreenWindow);
+
             // ShowPopup creates a borderless, chromeless window
             s_FullscreenWindow.ShowPopup();
             s_FullscreenWindow.position = s_FullscreenRect;
@@ -140,6 +143,20 @@ namespace Shilo.FullscreenPlay.Editor
             float h = res.height / scale;
 
             return new Rect(0, 0, w, h);
+        }
+
+        private static void HideToolbar(EditorWindow gameView)
+        {
+            try
+            {
+                var showToolbarProp = GameViewType.GetProperty("showToolbar",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                showToolbarProp?.SetValue(gameView, false);
+            }
+            catch
+            {
+                // Non-critical: toolbar will be visible but functional
+            }
         }
 
         private static void CopyGameViewSettings(EditorWindow fullscreenView)
