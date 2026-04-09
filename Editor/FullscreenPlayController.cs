@@ -80,14 +80,27 @@ namespace Shilo.FullscreenPlay.Editor
         private const string ToolsAuto      = "Tools/Fullscreen Play/Auto-Fullscreen on Play";
         private const string ToolsSettings  = "Tools/Fullscreen Play/Settings...";
 
-        // Legacy Edit/ menu entries kept for discoverability
-        private const string EditAuto       = "Edit/Fullscreen Play/Play Fullscreen";
-        private const string EditEnterNow   = "Edit/Fullscreen Play/Enter Fullscreen Now";
+        // Edit/ menu entries (mirrors Tools/ for discoverability)
+        private const string EditAuto       = "Edit/Fullscreen Play/Auto-Fullscreen on Play";
+        private const string EditToggle     = "Edit/Fullscreen Play/Toggle Fullscreen %#F11";
         private const string EditSettings   = "Edit/Fullscreen Play/Settings...";
 
         // --- Tools menu ---
 
-        [MenuItem(ToolsToggle, false, 100)]
+        [MenuItem(ToolsAuto, false, 100)]
+        private static void ToolsToggleAuto()
+        {
+            FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
+        }
+
+        [MenuItem(ToolsAuto, true)]
+        private static bool ValidateToolsToggleAuto()
+        {
+            Menu.SetChecked(ToolsAuto, FullscreenPlaySettings.PlayFullscreen);
+            return true;
+        }
+
+        [MenuItem(ToolsToggle, false, 101)]
         private static void ToolsToggleFullscreen()
         {
             // Guard needed because menu shortcuts bypass validation.
@@ -101,28 +114,15 @@ namespace Shilo.FullscreenPlay.Editor
             return EditorApplication.isPlaying;
         }
 
-        [MenuItem(ToolsAuto, false, 101)]
-        private static void ToolsToggleAuto()
-        {
-            FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
-        }
-
-        [MenuItem(ToolsAuto, true)]
-        private static bool ValidateToolsToggleAuto()
-        {
-            Menu.SetChecked(ToolsAuto, FullscreenPlaySettings.PlayFullscreen);
-            return true;
-        }
-
         [MenuItem(ToolsSettings, false, 200)]
         private static void ToolsOpenSettings()
         {
             SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
         }
 
-        // --- Edit menu (fallback / discoverability) ---
+        // --- Edit menu (mirrors Tools/ for discoverability) ---
 
-        [MenuItem(EditAuto, false, 160)]
+        [MenuItem(EditAuto, false, 100)]
         private static void EditToggleAuto()
         {
             FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
@@ -135,15 +135,15 @@ namespace Shilo.FullscreenPlay.Editor
             return true;
         }
 
-        [MenuItem(EditEnterNow, false, 161)]
-        private static void EditEnterFullscreenNow()
+        [MenuItem(EditToggle, false, 101)]
+        private static void EditToggleFullscreen()
         {
             if (!EditorApplication.isPlaying) return;
             FullscreenGameView.ToggleFullscreen();
         }
 
-        [MenuItem(EditEnterNow, true)]
-        private static bool ValidateEditEnterFullscreenNow()
+        [MenuItem(EditToggle, true)]
+        private static bool ValidateEditToggleFullscreen()
         {
             return EditorApplication.isPlaying;
         }

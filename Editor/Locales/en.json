@@ -3,5 +3,22 @@
   "play_focused": "Play Focused",
   "play_maximized": "Play Maximized",
   "play_unfocused": "Play Unfocused",
-  "play_fullscreen": "Play Fullscreen"
+  "play_fullscreen": "Play Fullscreen",
+
+  "settings_play_mode": "Play Mode",
+  "settings_play_fullscreen": "Play Fullscreen",
+  "settings_play_fullscreen_tooltip": "Automatically enter fullscreen when entering Play mode",
+  "settings_fullscreen_mode": "Fullscreen Mode",
+  "settings_fullscreen_mode_tooltip": "Fullscreen Windowed: borderless window covering the screen.\nExclusive Fullscreen is planned for a future release.",
+  "settings_hotkey": "Hotkey",
+  "settings_enable_f11_hotkey": "Enable F11 Hotkey",
+  "settings_enable_f11_tooltip": "Toggle fullscreen with the F11 key during Play mode",
+  "settings_hotkey_help": "The hotkey is F11 by default. You can rebind it in\nEdit \u2192 Shortcuts \u2192 Fullscreen Play.",
+  "settings_toast": "Toast Notification",
+  "settings_show_toast": "Show Toast",
+  "settings_show_toast_tooltip": "Show a brief overlay with exit instructions when entering fullscreen",
+  "settings_show_on_refocus": "Show on Refocus",
+  "settings_show_on_refocus_tooltip": "Re-show the toast when the fullscreen window regains focus (e.g. after alt-tab)",
+  "settings_toast_duration": "Toast Duration (s)",
+  "settings_toast_duration_tooltip": "How long the toast notification is visible"
 }

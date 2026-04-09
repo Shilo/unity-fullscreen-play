@@ -73,12 +73,12 @@ namespace Shilo.FullscreenPlay.Editor
 
             using (new EditorGUI.IndentLevelScope())
             {
-                EditorGUILayout.LabelField("Play Mode", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(I18n.Tr("settings_play_mode"), EditorStyles.boldLabel);
 
                 EditorGUI.BeginChangeCheck();
                 bool playFullscreen = EditorGUILayout.Toggle(
-                    new GUIContent("Play Fullscreen",
-                        "Automatically enter fullscreen when entering Play mode"),
+                    new GUIContent(I18n.Tr("settings_play_fullscreen"),
+                        I18n.Tr("settings_play_fullscreen_tooltip")),
                     FullscreenPlaySettings.PlayFullscreen);
                 if (EditorGUI.EndChangeCheck())
                     FullscreenPlaySettings.PlayFullscreen = playFullscreen;
@@ -86,19 +86,18 @@ namespace Shilo.FullscreenPlay.Editor
                 using (new EditorGUI.DisabledGroupScope(true))
                 {
                     EditorGUILayout.EnumPopup(
-                        new GUIContent("Fullscreen Mode",
-                            "Fullscreen Windowed: borderless window covering the screen.\n" +
-                            "Exclusive Fullscreen is planned for a future release."),
+                        new GUIContent(I18n.Tr("settings_fullscreen_mode"),
+                            I18n.Tr("settings_fullscreen_mode_tooltip")),
                         FullscreenPlaySettings.Mode);
                 }
 
                 EditorGUILayout.Space(10);
-                EditorGUILayout.LabelField("Hotkey", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(I18n.Tr("settings_hotkey"), EditorStyles.boldLabel);
 
                 EditorGUI.BeginChangeCheck();
                 bool enableHotkey = EditorGUILayout.Toggle(
-                    new GUIContent("Enable F11 Hotkey",
-                        "Toggle fullscreen with the F11 key during Play mode"),
+                    new GUIContent(I18n.Tr("settings_enable_f11_hotkey"),
+                        I18n.Tr("settings_enable_f11_tooltip")),
                     FullscreenPlaySettings.EnableHotkey);
                 if (EditorGUI.EndChangeCheck())
                     FullscreenPlaySettings.EnableHotkey = enableHotkey;
@@ -106,18 +105,17 @@ namespace Shilo.FullscreenPlay.Editor
                 if (FullscreenPlaySettings.EnableHotkey)
                 {
                     EditorGUILayout.HelpBox(
-                        "The hotkey is F11 by default. You can rebind it in\n" +
-                        "Edit \u2192 Shortcuts \u2192 Fullscreen Play.",
+                        I18n.Tr("settings_hotkey_help"),
                         MessageType.Info);
                 }
 
                 EditorGUILayout.Space(10);
-                EditorGUILayout.LabelField("Toast Notification", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(I18n.Tr("settings_toast"), EditorStyles.boldLabel);
 
                 EditorGUI.BeginChangeCheck();
                 bool showToast = EditorGUILayout.Toggle(
-                    new GUIContent("Show Toast",
-                        "Show a brief overlay with exit instructions when entering fullscreen"),
+                    new GUIContent(I18n.Tr("settings_show_toast"),
+                        I18n.Tr("settings_show_toast_tooltip")),
                     FullscreenPlaySettings.ShowToast);
                 if (EditorGUI.EndChangeCheck())
                     FullscreenPlaySettings.ShowToast = showToast;
@@ -125,20 +123,20 @@ namespace Shilo.FullscreenPlay.Editor
                 using (new EditorGUI.DisabledGroupScope(!FullscreenPlaySettings.ShowToast))
                 {
                     EditorGUI.BeginChangeCheck();
-                    float toastDuration = EditorGUILayout.Slider(
-                        new GUIContent("Toast Duration (s)",
-                            "How long the toast notification is visible"),
-                        FullscreenPlaySettings.ToastDuration, 1f, 10f);
-                    if (EditorGUI.EndChangeCheck())
-                        FullscreenPlaySettings.ToastDuration = toastDuration;
-
-                    EditorGUI.BeginChangeCheck();
                     bool showOnRefocus = EditorGUILayout.Toggle(
-                        new GUIContent("Show on Refocus",
-                            "Re-show the toast when the fullscreen window regains focus (e.g. after alt-tab)"),
+                        new GUIContent(I18n.Tr("settings_show_on_refocus"),
+                            I18n.Tr("settings_show_on_refocus_tooltip")),
                         FullscreenPlaySettings.ShowToastOnRefocus);
                     if (EditorGUI.EndChangeCheck())
                         FullscreenPlaySettings.ShowToastOnRefocus = showOnRefocus;
+
+                    EditorGUI.BeginChangeCheck();
+                    float toastDuration = EditorGUILayout.Slider(
+                        new GUIContent(I18n.Tr("settings_toast_duration"),
+                            I18n.Tr("settings_toast_duration_tooltip")),
+                        FullscreenPlaySettings.ToastDuration, 1f, 10f);
+                    if (EditorGUI.EndChangeCheck())
+                        FullscreenPlaySettings.ToastDuration = toastDuration;
                 }
             }
         }

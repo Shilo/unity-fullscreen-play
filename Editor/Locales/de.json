@@ -3,5 +3,22 @@
   "play_focused": "Fokussiert abspielen",
   "play_maximized": "Maximiert abspielen",
   "play_unfocused": "Unfokussiert abspielen",
-  "play_fullscreen": "Vollbild abspielen"
+  "play_fullscreen": "Vollbild abspielen",
+
+  "settings_play_mode": "Spielmodus",
+  "settings_play_fullscreen": "Im Vollbild abspielen",
+  "settings_play_fullscreen_tooltip": "Automatisch Vollbild aktivieren beim Starten des Spielmodus",
+  "settings_fullscreen_mode": "Vollbildmodus",
+  "settings_fullscreen_mode_tooltip": "Vollbild-Fenster: rahmenloses Fenster \u00fcber den gesamten Bildschirm.\nExklusives Vollbild ist f\u00fcr eine zuk\u00fcnftige Version geplant.",
+  "settings_hotkey": "Tastenk\u00fcrzel",
+  "settings_enable_f11_hotkey": "F11-Taste aktivieren",
+  "settings_enable_f11_tooltip": "Vollbild mit F11-Taste w\u00e4hrend des Spielmodus ein-/ausschalten",
+  "settings_hotkey_help": "Das Standard-Tastenk\u00fcrzel ist F11. Sie k\u00f6nnen es unter\nBearbeiten \u2192 Shortcuts \u2192 Fullscreen Play neu zuordnen.",
+  "settings_toast": "Toast-Benachrichtigung",
+  "settings_show_toast": "Toast anzeigen",
+  "settings_show_toast_tooltip": "Kurzes Overlay mit Anweisungen zum Beenden des Vollbilds anzeigen",
+  "settings_show_on_refocus": "Bei Reaktivierung anzeigen",
+  "settings_show_on_refocus_tooltip": "Toast erneut anzeigen, wenn das Vollbildfenster den Fokus zur\u00fcckgewinnt (z.\u00a0B. nach Alt+Tab)",
+  "settings_toast_duration": "Toast-Dauer (s)",
+  "settings_toast_duration_tooltip": "Wie lange die Toast-Benachrichtigung sichtbar ist"
 }
