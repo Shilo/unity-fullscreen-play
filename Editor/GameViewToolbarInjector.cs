@@ -346,6 +346,7 @@ namespace Shilo.FullscreenPlay.Editor
                     {
                         SetBehavior(gameView, idx);
                         FullscreenPlaySettings.PlayFullscreen = false;
+                        gameView.Repaint();
                     }
                     catch { /* silent no-op */ }
                 });
@@ -356,7 +357,11 @@ namespace Shilo.FullscreenPlay.Editor
             menu.AddItem(
                 new GUIContent("Play Fullscreen"),
                 playFullscreen,
-                () => FullscreenPlaySettings.PlayFullscreen = !playFullscreen);
+                () =>
+                {
+                    FullscreenPlaySettings.PlayFullscreen = !playFullscreen;
+                    gameView.Repaint();
+                });
 
             menu.ShowAsContext();
         }

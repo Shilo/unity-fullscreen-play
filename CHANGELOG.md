@@ -10,8 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial release
-- Play Fullscreen toggle in the Game view toolbar
-- F11 hotkey to toggle fullscreen (configurable)
-- Toast notification showing exit instructions
-- Settings window for configuring hotkeys and fullscreen mode
-- Support for Fullscreen Windowed and Exclusive Fullscreen modes
+- Play Fullscreen option in the GameView play-mode dropdown (alongside Play Focused / Maximized / Unfocused)
+- Edit > Fullscreen Play menu with toggle, instant-enter, and settings
+- F11 hotkey to toggle fullscreen (rebindable via Edit > Shortcuts)
+- Esc to exit fullscreen without stopping Play
+- Toast notification showing exit instructions (configurable fade duration)
+- Settings panel in Edit > Preferences > Fullscreen Play
+- Fullscreen Windowed mode (Exclusive Fullscreen planned for a future release)
+- Clean assembly reload and package enable/disable lifecycle
