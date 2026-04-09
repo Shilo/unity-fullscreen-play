@@ -79,11 +79,13 @@ namespace Shilo.FullscreenPlay.Editor
         private const string ToolsToggle    = "Tools/Fullscreen Play/Toggle Fullscreen %#F11";
         private const string ToolsAuto      = "Tools/Fullscreen Play/Auto-Fullscreen on Play";
         private const string ToolsSettings  = "Tools/Fullscreen Play/Settings...";
+        private const string ToolsUpdate    = "Tools/Fullscreen Play/Check for Update...";
 
         // Edit/ menu entries (mirrors Tools/ for discoverability)
         private const string EditAuto       = "Edit/Fullscreen Play/Auto-Fullscreen on Play";
         private const string EditToggle     = "Edit/Fullscreen Play/Toggle Fullscreen %#F11";
         private const string EditSettings   = "Edit/Fullscreen Play/Settings...";
+        private const string EditUpdate     = "Edit/Fullscreen Play/Check for Update...";
 
         // --- Tools menu ---
 
@@ -120,6 +122,12 @@ namespace Shilo.FullscreenPlay.Editor
             SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
         }
 
+        [MenuItem(ToolsUpdate, false, 201)]
+        private static void ToolsCheckForUpdate()
+        {
+            PackageUpdater.CheckForUpdate();
+        }
+
         // --- Edit menu (mirrors Tools/ for discoverability) ---
 
         [MenuItem(EditAuto, false, 100)]
@@ -152,6 +160,12 @@ namespace Shilo.FullscreenPlay.Editor
         private static void EditOpenSettings()
         {
             SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
+        }
+
+        [MenuItem(EditUpdate, false, 201)]
+        private static void EditCheckForUpdate()
+        {
+            PackageUpdater.CheckForUpdate();
         }
 
         // ---- Shortcut (F11 by default, rebindable via Edit > Shortcuts) ----
