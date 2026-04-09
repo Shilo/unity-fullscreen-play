@@ -77,22 +77,16 @@ namespace Shilo.FullscreenPlay.Editor
 
         // ---- Menu items ----
 
-        private const string MenuPlayFullscreen = "Edit/Fullscreen Play/Play Fullscreen";
-        private const string MenuEnterNow = "Edit/Fullscreen Play/Enter Fullscreen Now";
-        private const string MenuSettings = "Edit/Fullscreen Play/Settings...";
+        // ---- Menu items (Tools/ — standard for third-party plugins) ----
 
-        [MenuItem(MenuPlayFullscreen, false, 160)]
-        private static void TogglePlayFullscreen()
-        {
-            FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
-        }
+        private const string ToolsToggle    = "Tools/Fullscreen Play/Toggle Fullscreen %F11";
+        private const string ToolsAuto      = "Tools/Fullscreen Play/Auto-Fullscreen on Play";
+        private const string ToolsSettings  = "Tools/Fullscreen Play/Settings...";
 
-        [MenuItem(MenuPlayFullscreen, true)]
-        private static bool ValidateTogglePlayFullscreen()
-        {
-            Menu.SetChecked(MenuPlayFullscreen, FullscreenPlaySettings.PlayFullscreen);
-            return true;
-        }
+        // Legacy Edit/ menu entries kept for discoverability
+        private const string EditAuto       = "Edit/Fullscreen Play/Play Fullscreen";
+        private const string EditEnterNow   = "Edit/Fullscreen Play/Enter Fullscreen Now";
+        private const string EditSettings   = "Edit/Fullscreen Play/Settings...";
 
         /// <summary>
         /// One-shot flag: enter fullscreen on the next EnteredPlayMode without
@@ -100,8 +94,10 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         private static bool s_OneShotFullscreen;
 
-        [MenuItem(MenuEnterNow, false, 161)]
-        private static void EnterFullscreenNow()
+        // --- Tools menu ---
+
+        [MenuItem(ToolsToggle, false, 100)]
+        private static void ToolsToggleFullscreen()
         {
             if (EditorApplication.isPlaying)
             {
@@ -109,16 +105,61 @@ namespace Shilo.FullscreenPlay.Editor
             }
             else
             {
-                // Not playing yet – use a one-shot flag so we enter fullscreen
-                // on the next EnteredPlayMode without permanently enabling the
-                // auto-fullscreen preference.
                 s_OneShotFullscreen = true;
                 EditorApplication.isPlaying = true;
             }
         }
 
-        [MenuItem(MenuSettings, false, 200)]
-        private static void OpenSettings()
+        [MenuItem(ToolsAuto, false, 101)]
+        private static void ToolsToggleAuto()
+        {
+            FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
+        }
+
+        [MenuItem(ToolsAuto, true)]
+        private static bool ValidateToolsToggleAuto()
+        {
+            Menu.SetChecked(ToolsAuto, FullscreenPlaySettings.PlayFullscreen);
+            return true;
+        }
+
+        [MenuItem(ToolsSettings, false, 200)]
+        private static void ToolsOpenSettings()
+        {
+            SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
+        }
+
+        // --- Edit menu (fallback / discoverability) ---
+
+        [MenuItem(EditAuto, false, 160)]
+        private static void EditToggleAuto()
+        {
+            FullscreenPlaySettings.PlayFullscreen = !FullscreenPlaySettings.PlayFullscreen;
+        }
+
+        [MenuItem(EditAuto, true)]
+        private static bool ValidateEditToggleAuto()
+        {
+            Menu.SetChecked(EditAuto, FullscreenPlaySettings.PlayFullscreen);
+            return true;
+        }
+
+        [MenuItem(EditEnterNow, false, 161)]
+        private static void EditEnterFullscreenNow()
+        {
+            if (EditorApplication.isPlaying)
+            {
+                FullscreenGameView.ToggleFullscreen();
+            }
+            else
+            {
+                s_OneShotFullscreen = true;
+                EditorApplication.isPlaying = true;
+            }
+        }
+
+        [MenuItem(EditSettings, false, 200)]
+        private static void EditOpenSettings()
         {
             SettingsService.OpenUserPreferences("Preferences/Fullscreen Play");
         }
