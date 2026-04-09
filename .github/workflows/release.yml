@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: current
+        run: |
+          version=$(jq -r '.version' package.json)
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Bump version
+        id: bump
+        run: |
+          current="${{ steps.current.outputs.version }}"
+          IFS='.' read -r major minor patch <<< "$current"
+
+          case "${{ inputs.version_bump }}" in
+            major)
+              major=$((major + 1))
+              minor=0
+              patch=0
+              ;;
+            minor)
+              minor=$((minor + 1))
+              patch=0
+              ;;
+            patch)
+              patch=$((patch + 1))
+              ;;
+          esac
+
+          new_version="${major}.${minor}.${patch}"
+          echo "version=$new_version" >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        run: |
+          jq --arg v "${{ steps.bump.outputs.version }}" '.version = $v' package.json > tmp.json
+          mv tmp.json package.json
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}"
+          git push
+
+      - name: Create tag
+        run: |
+          git tag "v${{ steps.bump.outputs.version }}"
+          git push origin "v${{ steps.bump.outputs.version }}"
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          prev_tag=$(git tag --sort=-v:refname | head -2 | tail -1)
+          if [ -z "$prev_tag" ] || [ "$prev_tag" = "v${{ steps.bump.outputs.version }}" ]; then
+            echo "body=Initial release" >> $GITHUB_OUTPUT
+          else
+            notes=$(git log --pretty=format:"- %s" "${prev_tag}..HEAD~1")
+            echo "body<<EOF" >> $GITHUB_OUTPUT
+            echo "$notes" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.bump.outputs.version }}"
+          name: "v${{ steps.bump.outputs.version }}"
+          body: |
+            ## Fullscreen Play v${{ steps.bump.outputs.version }}
+
+            ### Install via Git URL
+            ```
+            https://github.com/${{ github.repository }}.git#v${{ steps.bump.outputs.version }}
+            ```
+
+            ### Changes
+            ${{ steps.notes.outputs.body }}
+          draft: false
+          prerelease: false
