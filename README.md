@@ -79,7 +79,7 @@ The F11 hotkey can be rebound in **Edit > Shortcuts** under "Fullscreen Play".
 
 The package creates a second borderless `GameView` window via Unity's internal API and positions it to cover the entire screen. The original Game tab remains untouched — closing the fullscreen window simply returns you to the normal editor layout.
 
-On Windows, native Win32 APIs ensure the window covers the taskbar and stays on top.
+On Windows, native Win32 APIs ensure the window covers the taskbar. Alt-tab works normally.
 
 ## License
 

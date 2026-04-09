@@ -181,15 +181,14 @@ EnterFullscreen()
     6. ShowPopup() -> borderless, chromeless window
     7. Set position to cover full screen
     8. Copy display/resolution settings from existing GameView
-    9. [Windows] Apply Win32 TOPMOST + popup style
-   10. Show toast notification (delayed, so it layers on top)
+    9. [Windows] Apply Win32 popup style + HWND_TOP (non-pinning)
+   10. Show toast notification (delayed + brought to top on Windows)
    11. Return focus to GameView for input
 
 ExitFullscreen()
     1. Hide toast
-    2. [Windows] Remove TOPMOST flag
-    3. Close the popup window
-    4. Clear state
+    2. Close the popup window
+    3. Clear state
 ```
 
 **Key reflection points:**
@@ -218,9 +217,8 @@ EditorApplication.playModeStateChanged
 - **F11** via `[Shortcut("Fullscreen Play/Toggle Fullscreen", KeyCode.F11)]` - Unity's official Shortcuts API, rebindable via Edit > Shortcuts
 - **Escape** via `EditorApplication.globalEventHandler` (reflection) - intercepts Escape globally but only acts when fullscreen is active, then calls `Event.Use()` to consume it
 
-**Why two different keyboard mechanisms:**
-- F11 uses the `[Shortcut]` API because it should be discoverable and rebindable through Unity's Shortcuts Manager. Users can change it to any key they want.
-- Escape uses the global event handler because registering Escape as a `[Shortcut]` would conflict with every game that uses Escape. The global handler only intercepts it when fullscreen is active and consumes the event so the game doesn't receive it.
+**Why both mechanisms for F11:**
+F11 is registered via both `[Shortcut]` (for discoverability in Edit > Shortcuts) and `globalEventHandler` (for reliability). The `[Shortcut]` API doesn't fire when the fullscreen GameView captures keyboard input during play mode, so the global handler ensures F11 always works. Escape is only in the global handler since registering it as a `[Shortcut]` would conflict with games that use Escape for pause menus.
 
 **Assembly reload cleanup:**
 `AssemblyReloadEvents.beforeAssemblyReload` fires before domain reload (script recompilation, package disable/re-enable). The handler:
@@ -307,17 +305,15 @@ On Windows, `ShowPopup()` alone may not cover the taskbar. We use Win32 P/Invoke
 // Remove all window chrome
 SetWindowLong(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
 
-// Position as topmost, covering entire screen in physical pixels
-SetWindowPos(hwnd, HWND_TOPMOST, x, y, w, h, SWP_SHOWWINDOW);
+// Place at top of z-order (covers taskbar) without pinning permanently
+SetWindowPos(hwnd, HWND_TOP, x, y, w, h, SWP_SHOWWINDOW);
 ```
 
-On exit, `HWND_NOTOPMOST` is applied to clean up the z-order before closing:
+`HWND_TOP` (not `HWND_TOPMOST`) is used deliberately. `HWND_TOPMOST` would pin the window above everything permanently, blocking alt-tab and other windows. `HWND_TOP` places it at the top of the z-order once — it covers the taskbar on initial show, but alt-tab works normally to bring other windows in front.
 
-```csharp
-SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-```
+The toast popup is separately brought to the top via `BringWindowToTop()` so it appears above the fullscreen GameView.
 
-This is wrapped in `#if UNITY_EDITOR_WIN` so it compiles cleanly on macOS/Linux, where `ShowPopup()` alone is sufficient (macOS handles fullscreen differently via its own window management).
+This is wrapped in `#if UNITY_EDITOR_WIN` so it compiles cleanly on macOS/Linux, where `ShowPopup()` alone is sufficient.
 
 #### GameView Settings Copying
 
@@ -419,7 +415,7 @@ No `?path=` parameter needed. Users can pin versions with `#v0.1.0` tags. The tr
 
 | Platform | Fullscreen Windowed | Exclusive Fullscreen | Taskbar Coverage |
 |----------|-------------------|---------------------|-----------------|
-| Windows | Full support | Planned (not in v0.1) | Win32 TOPMOST |
+| Windows | Full support | Planned (not in v0.1) | Win32 HWND_TOP |
 | macOS | ShowPopup() only | Not planned | Native handling |
 | Linux | ShowPopup() only | Not planned | Native handling |
 
@@ -444,7 +440,7 @@ Currently targets the primary monitor (position 0,0). The screen rect calculatio
 Games using `Cursor.lockState = CursorLockMode.Locked` will lock the cursor in the fullscreen window. Pressing Escape may first unlock the cursor (Unity's default behavior) before a second Escape exits fullscreen. This is consistent with built game behavior.
 
 ### Alt-Tab
-Alt-tabbing while fullscreen will bring other windows in front. The fullscreen window remains open in the background. The user can alt-tab back or press F11/Esc to exit. The `HWND_TOPMOST` flag is only set during the initial window creation; it doesn't prevent alt-tab from working normally.
+Alt-tabbing while fullscreen works normally — other windows come to the front. The fullscreen window remains open in the background. The user can alt-tab back or press F11/Esc to exit. `HWND_TOP` (not `HWND_TOPMOST`) is used so the window doesn't pin above everything.
 
 ### Exclusive Fullscreen
 The `FullscreenMode.ExclusiveFullscreen` enum value exists in code but is not yet implemented. The Fullscreen Mode dropdown in Preferences is disabled (greyed out), locked to `FullscreenWindowed`. Any stale `ExclusiveFullscreen` pref saved from a prior version is auto-reverted on startup.
