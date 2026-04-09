@@ -11,7 +11,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **F11 hotkey** — toggle fullscreen on/off during Play mode (rebindable via Edit > Shortcuts)
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
 - **Toast notification** — brief overlay showing exit instructions (configurable)
-- **Fullscreen Windowed** or **Exclusive Fullscreen** modes (Windows)
+- **Fullscreen Windowed** mode — **Exclusive Fullscreen** planned for a future release
 - **Settings panel** in Edit > Preferences > Fullscreen Play
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
@@ -68,7 +68,7 @@ Open **Edit > Preferences > Fullscreen Play** to configure:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Play Fullscreen | Off | Auto-fullscreen on entering Play mode |
-| Fullscreen Mode | Fullscreen Windowed | Borderless window or exclusive fullscreen |
+| Fullscreen Mode | Fullscreen Windowed | Borderless window (exclusive fullscreen planned) |
 | Enable F11 Hotkey | On | Allow F11 to toggle fullscreen |
 | Show Toast | On | Show exit instructions overlay |
 | Toast Duration | 3s | How long the toast is visible |
