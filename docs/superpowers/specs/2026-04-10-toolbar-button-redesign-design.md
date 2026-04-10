@@ -67,17 +67,53 @@ The exact list will be validated at implementation time. The pattern is: try mul
 - `WeakReference` for captured EditorWindow references
 - `DetachFromPanelEvent` triggers re-scan
 
-## Error Handling Contract
+## Error Handling Contract — Zero Noise
 
-Every operation is individually wrapped in try/catch:
+**Absolute rule: no crashes, no freezes, no errors, no warnings, no `Debug.Log` output.** This button is a convenience feature. If anything goes wrong at any level, the button silently doesn't appear. The user never knows it failed — they just use the Tools menu or F11 instead.
 
-1. Reflection access fails → `s_Ready = false`, entire class is inert
-2. Toolbar container not found in VisualElement tree → no-op (button doesn't appear)
-3. All icon names fail to resolve → fall back to `GUIContent("FS")`
-4. IMGUIContainer insertion fails → no-op
-5. Button element detached → schedule re-scan
+Every operation is individually wrapped in bare `catch` (not `catch (Exception e)` with logging). No `Debug.LogWarning`, no `Debug.LogError`, no re-throws. Silent swallow everywhere.
 
-The Tools menu and F11 shortcut work regardless of injection success.
+### Failure cascade
+
+| What fails | What happens | User sees |
+|---|---|---|
+| Static constructor reflection | `s_Ready = false`, entire class is permanently inert | Nothing — no button |
+| `Resources.FindObjectsOfTypeAll` | Scan silently skips | Nothing — no button |
+| VisualElement tree walk fails | Injection silently skips that GameView | Nothing — no button |
+| All icon names fail to resolve | Fall back to `GUIContent("FS")` text label | Text button "FS" |
+| `GUIContent("FS")` somehow fails | Draw callback returns without drawing | Nothing — no button |
+| IMGUIContainer creation/insertion throws | Injection silently skips | Nothing — no button |
+| Toggle click handler throws | Click is silently swallowed | Button appears but click does nothing |
+| Button element detached from panel | Schedule re-scan (may re-inject) | Button briefly disappears, may reappear |
+| `FullscreenPlaySettings` read/write throws | Toggle silently fails | Button appears but state doesn't change |
+| `FullscreenGameView.EnterFullscreen()` throws | Caught inside click handler | Button toggles but fullscreen doesn't activate |
+| GeometryChangedEvent callback throws | Position update silently skips | Button may be slightly mispositioned |
+| `RemoveAllOverlays` fails during cleanup | Silently skips — overlay will be GC'd anyway | Nothing visible |
+
+### Implementation pattern
+
+```csharp
+// EVERY method body follows this pattern:
+private static void SomeMethod()
+{
+    try
+    {
+        // ... actual logic ...
+    }
+    catch { /* silent no-op */ }
+}
+
+// EVERY lambda/callback follows this pattern:
+var overlay = new IMGUIContainer(() =>
+{
+    try { DrawToggle(target); }
+    catch { /* silent no-op */ }
+});
+```
+
+No exceptions. No "this one is safe enough to skip the try/catch." Every single code path that could throw is wrapped.
+
+The Tools menu and F11 shortcut work regardless of injection success — they are completely independent code paths in `FullscreenPlayController`.
 
 ## Localization
 
