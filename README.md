@@ -11,13 +11,14 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle auto-fullscreen on play setting
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
-- **Toast notification** — brief overlay showing exit instructions (configurable)
+- **Alt+F4 / Cmd+Q / Ctrl+Q** — exits fullscreen instead of closing the editor
+- **Toast notification** — brief overlay showing exit instructions; click anywhere to dismiss
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)
 - **Check for Update** — one-click update check via Tools > Fullscreen Play > Check for Update
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
-- **Windows** supported (macOS/Linux: fullscreen windowed only)
+- **Cross-platform** — Windows, macOS, and Linux (Windows uses native Win32 for taskbar coverage; macOS/Linux use fullscreen windowed)
 
 ## Requirements
 
@@ -86,7 +87,9 @@ The F11 hotkey can be rebound in **Edit > Shortcuts** under "Fullscreen Play".
 
 Unity's Game tab is internally an `EditorWindow` called `GameView`. This package creates a **second** GameView instance and shows it as a borderless popup window sized to cover your entire screen. Both GameViews render the game simultaneously — the original stays safely docked in your editor layout, and the fullscreen one overlays everything.
 
-When you exit fullscreen (Esc, F11, or stopping Play), the popup is simply closed. Your editor layout is never modified — there's nothing to restore.
+When you exit fullscreen (Esc, F11, Alt+F4, or stopping Play), the popup is simply closed. Your editor layout is never modified — there's nothing to restore.
+
+**Quit-shortcut safety** — Because the fullscreen window looks like a standalone app, users instinctively press Alt+F4 (Windows), Cmd+Q or Cmd+W (macOS), or Ctrl+Q (Linux) to close it. These shortcuts are intercepted while fullscreen is active and exit fullscreen instead of quitting Unity.
 
 **On Windows**, the popup window alone wouldn't cover the taskbar, so native Win32 APIs (`SetWindowPos`, `SetWindowLong`) strip the window chrome and position it across the full screen. Alt-tab works normally — the fullscreen window doesn't pin itself above other applications.
 

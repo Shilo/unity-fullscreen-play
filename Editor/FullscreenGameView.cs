@@ -226,10 +226,7 @@ namespace Shilo.FullscreenPlay.Editor
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         private static readonly IntPtr HWND_TOP = IntPtr.Zero;
-        private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
         private const uint SWP_SHOWWINDOW = 0x0040;
-        private const uint SWP_NOSIZE = 0x0001;
-        private const uint SWP_NOMOVE = 0x0002;
         private const int GWL_STYLE = -16;
         private const int WS_POPUP = unchecked((int)0x80000000);
         private const int WS_VISIBLE = 0x10000000;
