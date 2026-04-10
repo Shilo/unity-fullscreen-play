@@ -4,6 +4,8 @@ Test your game in true fullscreen directly from the Unity Editor — no build re
 
 Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fullscreen window when you enter Play mode. Press **Esc** or **F11** to return to the normal editor.
 
+![Unity Fullscreen Play screenshot](docs/screenshot.png)
+
 ## Features
 
 - **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play (Ctrl+Shift+F11), toggle fullscreen (F11), check for update, and settings
