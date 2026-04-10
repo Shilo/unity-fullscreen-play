@@ -7,7 +7,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 ## Features
 
 - **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play (Ctrl+Shift+F11), toggle fullscreen (F11), check for update, and settings
-- **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
+- **Game view toolbar button** — fullscreen toggle icon in the GameView toolbar, next to the Play Mode dropdown
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle auto-fullscreen on play setting
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
@@ -59,7 +59,7 @@ Add this line to your project's `Packages/manifest.json`:
 2. Press Play as usual — the Game view fills the entire screen
 3. Press **Esc** or **F11** to exit fullscreen
 
-You can also enable this from the Game view toolbar dropdown (select "Play Fullscreen").
+You can also enable this from the Game view toolbar (click the fullscreen toggle icon next to the Play Mode dropdown).
 
 ### Manual fullscreen (during Play mode)
 - Press **F11** to toggle fullscreen
@@ -93,7 +93,7 @@ When you exit fullscreen (Esc, F11, Alt+F4, or stopping Play), the popup is simp
 
 **On Windows**, the popup window alone wouldn't cover the taskbar, so native Win32 APIs (`SetWindowPos`, `SetWindowLong`) strip the window chrome and position it across the full screen. Alt-tab works normally — the fullscreen window doesn't pin itself above other applications.
 
-**The toolbar dropdown** ("Play Fullscreen" alongside Play Focused / Maximized / Unfocused) works by overlaying an invisible button on top of Unity's built-in dropdown. Since the built-in dropdown is driven by an enum that can't be extended, the package draws its own identical dropdown on top that includes the extra option. If Unity changes its internal toolbar layout in a future version, the overlay silently disables itself and the Tools menu / F11 shortcut still work.
+**The toolbar button** (fullscreen toggle icon next to the Play Mode dropdown) is injected into the GameView's visual tree as a small `IMGUIContainer`. It uses a Unity built-in icon with cascading fallbacks for cross-version compatibility. If Unity changes its internal toolbar structure in a future version, the button silently doesn't appear — no errors, no warnings — and the Tools menu / F11 shortcut still work.
 
 For the full technical deep-dive, see [DOCUMENTATION.md](DOCUMENTATION.md).
 
