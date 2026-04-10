@@ -103,8 +103,7 @@ namespace Shilo.FullscreenPlay.Editor
             catch { /* silent no-op */ }
 
             // Final fallback: text label
-            if (s_ButtonContent == null)
-                s_ButtonContent = new GUIContent("FS");
+            s_ButtonContent = new GUIContent("FS");
         }
 
         // ================================================================
@@ -140,10 +139,9 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static void ScanAndInject()
         {
-            if (!s_Ready) return;
-
             try
             {
+                if (!s_Ready) return;
                 var views = Resources.FindObjectsOfTypeAll(s_GameViewType);
                 foreach (var obj in views)
                 {
@@ -339,7 +337,7 @@ namespace Shilo.FullscreenPlay.Editor
         /// visual tree. Called by <see cref="FullscreenPlayController"/>
         /// before assembly reload to prevent stale delegates.
         /// </summary>
-        internal static void RemoveAllOverlays()
+        internal static void RemoveAllButtons()
         {
             try
             {
@@ -354,8 +352,8 @@ namespace Shilo.FullscreenPlay.Editor
                         if (window == null) continue;
 
                         var root = window.rootVisualElement;
-                        var overlay = root?.Q(OverlayName);
-                        overlay?.RemoveFromHierarchy();
+                        var button = root?.Q(OverlayName);
+                        button?.RemoveFromHierarchy();
                     }
                     catch { /* silent no-op */ }
                 }
