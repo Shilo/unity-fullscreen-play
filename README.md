@@ -18,7 +18,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **Check for Update** — one-click update check via Tools > Fullscreen Play > Check for Update
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
-- **Cross-platform** — Windows, macOS, and Linux (Windows uses native Win32 for taskbar coverage; macOS/Linux use fullscreen windowed)
+- **Windows-optimized** — native Win32 APIs ensure full taskbar coverage and chrome removal; macOS/Linux use `ShowPopup()` windowed fullscreen (dock/panel coverage depends on window manager)
 
 ## Requirements
 
