@@ -7,18 +7,17 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 ## Features
 
 - **Tools menu** — Tools > Fullscreen Play with auto-fullscreen on play (Ctrl+Shift+F11), toggle fullscreen (F11), check for update, and settings
-- **Game view toolbar button** — fullscreen toggle icon in the GameView toolbar, next to the Play Mode dropdown
+- **Game view dropdown** — "Play Fullscreen" alongside Play Focused / Maximized / Unfocused
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle auto-fullscreen on play setting
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
-- **Alt+F4 / Cmd+Q / Ctrl+Q** — exits fullscreen instead of closing the editor
-- **Toast notification** — brief overlay showing exit instructions; click anywhere to dismiss
+- **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)
 - **Check for Update** — one-click update check via Tools > Fullscreen Play > Check for Update
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
-- **Windows-optimized** — native Win32 APIs ensure full taskbar coverage and chrome removal; macOS/Linux use `ShowPopup()` windowed fullscreen (dock/panel coverage depends on window manager)
+- **Windows** supported (macOS/Linux: fullscreen windowed only)
 
 ## Requirements
 
@@ -59,7 +58,7 @@ Add this line to your project's `Packages/manifest.json`:
 2. Press Play as usual — the Game view fills the entire screen
 3. Press **Esc** or **F11** to exit fullscreen
 
-You can also enable this from the Game view toolbar (click the fullscreen toggle icon next to the Play Mode dropdown).
+You can also enable this from the Game view toolbar dropdown (select "Play Fullscreen").
 
 ### Manual fullscreen (during Play mode)
 - Press **F11** to toggle fullscreen
@@ -87,13 +86,11 @@ The F11 hotkey can be rebound in **Edit > Shortcuts** under "Fullscreen Play".
 
 Unity's Game tab is internally an `EditorWindow` called `GameView`. This package creates a **second** GameView instance and shows it as a borderless popup window sized to cover your entire screen. Both GameViews render the game simultaneously — the original stays safely docked in your editor layout, and the fullscreen one overlays everything.
 
-When you exit fullscreen (Esc, F11, Alt+F4, or stopping Play), the popup is simply closed. Your editor layout is never modified — there's nothing to restore.
-
-**Quit-shortcut safety** — Because the fullscreen window looks like a standalone app, users instinctively press Alt+F4 (Windows), Cmd+Q or Cmd+W (macOS), or Ctrl+Q (Linux) to close it. These shortcuts are intercepted while fullscreen is active and exit fullscreen instead of quitting Unity.
+When you exit fullscreen (Esc, F11, or stopping Play), the popup is simply closed. Your editor layout is never modified — there's nothing to restore.
 
 **On Windows**, the popup window alone wouldn't cover the taskbar, so native Win32 APIs (`SetWindowPos`, `SetWindowLong`) strip the window chrome and position it across the full screen. Alt-tab works normally — the fullscreen window doesn't pin itself above other applications.
 
-**The toolbar button** (fullscreen toggle icon next to the Play Mode dropdown) is injected into the GameView's visual tree as a small `IMGUIContainer`. It uses a Unity built-in icon with cascading fallbacks for cross-version compatibility. If Unity changes its internal toolbar structure in a future version, the button silently doesn't appear — no errors, no warnings — and the Tools menu / F11 shortcut still work.
+**The toolbar dropdown** ("Play Fullscreen" alongside Play Focused / Maximized / Unfocused) works by overlaying an invisible button on top of Unity's built-in dropdown. Since the built-in dropdown is driven by an enum that can't be extended, the package draws its own identical dropdown on top that includes the extra option. If Unity changes its internal toolbar layout in a future version, the overlay silently disables itself and the Tools menu / F11 shortcut still work.
 
 For the full technical deep-dive, see [DOCUMENTATION.md](DOCUMENTATION.md).
 
