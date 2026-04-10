@@ -73,33 +73,38 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static void ResolveIcon()
         {
-            // Try built-in icon names in priority order.
-            // Unity has renamed/added icons across versions.
-            string[] candidates =
+            try
             {
-                "d_FullscreenOn",
-                "FullscreenOn",
-                "d_Fullscreen",
-                "Fullscreen",
-                "d_ScaleTool",
-            };
-
-            foreach (var name in candidates)
-            {
-                try
+                // Try built-in icon names in priority order.
+                // Unity has renamed/added icons across versions.
+                string[] candidates =
                 {
-                    var content = EditorGUIUtility.IconContent(name);
-                    if (content != null && content.image != null)
+                    "d_FullscreenOn",
+                    "FullscreenOn",
+                    "d_Fullscreen",
+                    "Fullscreen",
+                    "d_ScaleTool",
+                };
+
+                foreach (var name in candidates)
+                {
+                    try
                     {
-                        s_ButtonContent = new GUIContent(content.image);
-                        return;
+                        var content = EditorGUIUtility.IconContent(name);
+                        if (content != null && content.image != null)
+                        {
+                            s_ButtonContent = new GUIContent(content.image);
+                            return;
+                        }
                     }
+                    catch { /* try next */ }
                 }
-                catch { /* try next */ }
             }
+            catch { /* silent no-op */ }
 
             // Final fallback: text label
-            s_ButtonContent = new GUIContent("FS");
+            if (s_ButtonContent == null)
+                s_ButtonContent = new GUIContent("FS");
         }
 
         // ================================================================
@@ -236,35 +241,39 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static void DrawToggle(EditorWindow gameView)
         {
-            bool wasEnabled = FullscreenPlaySettings.PlayFullscreen;
-
-            // Update tooltip based on current state
-            s_ButtonContent.tooltip = wasEnabled
-                ? I18n.Tr("fullscreen_button_tooltip_enabled")
-                : I18n.Tr("fullscreen_button_tooltip_disabled");
-
-            var rect = new Rect(0, 0, ButtonWidth, ButtonHeight);
-            bool nowEnabled = GUI.Toggle(rect, wasEnabled, s_ButtonContent,
-                EditorStyles.toolbarButton);
-
-            if (nowEnabled != wasEnabled)
+            try
             {
-                FullscreenPlaySettings.PlayFullscreen = nowEnabled;
+                bool wasEnabled = FullscreenPlaySettings.PlayFullscreen;
 
-                if (nowEnabled && EditorApplication.isPlaying
-                    && !FullscreenGameView.IsFullscreen)
-                {
-                    EditorApplication.delayCall +=
-                        () => { try { FullscreenGameView.EnterFullscreen(); } catch { } };
-                }
-                else if (!nowEnabled && FullscreenGameView.IsFullscreen)
-                {
-                    EditorApplication.delayCall +=
-                        () => { try { FullscreenGameView.ExitFullscreen(); } catch { } };
-                }
+                // Update tooltip based on current state
+                s_ButtonContent.tooltip = wasEnabled
+                    ? I18n.Tr("fullscreen_button_tooltip_enabled")
+                    : I18n.Tr("fullscreen_button_tooltip_disabled");
 
-                gameView.Repaint();
+                var rect = new Rect(0, 0, ButtonWidth, ButtonHeight);
+                bool nowEnabled = GUI.Toggle(rect, wasEnabled, s_ButtonContent,
+                    EditorStyles.toolbarButton);
+
+                if (nowEnabled != wasEnabled)
+                {
+                    FullscreenPlaySettings.PlayFullscreen = nowEnabled;
+
+                    if (nowEnabled && EditorApplication.isPlaying
+                        && !FullscreenGameView.IsFullscreen)
+                    {
+                        EditorApplication.delayCall +=
+                            () => { try { FullscreenGameView.EnterFullscreen(); } catch { } };
+                    }
+                    else if (!nowEnabled && FullscreenGameView.IsFullscreen)
+                    {
+                        EditorApplication.delayCall +=
+                            () => { try { FullscreenGameView.ExitFullscreen(); } catch { } };
+                    }
+
+                    gameView.Repaint();
+                }
             }
+            catch { /* silent no-op */ }
         }
 
         // ================================================================
@@ -301,20 +310,24 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         private static float CalculateRightOffset(float windowWidth)
         {
-            if (windowWidth < 400f)
-                return 180f;
+            try
+            {
+                if (windowWidth < 400f)
+                    return 180f;
 
-            float totalFixed = EstimatedLeftGroupWidth + OriginalDropdownWidth
-                             + MiddleButtonsWidth + RightGroupWidth;
-            float totalFlex  = Mathf.Max(0f, windowWidth - totalFixed);
-            float eachFlex   = totalFlex / 2f;
+                float totalFixed = EstimatedLeftGroupWidth + OriginalDropdownWidth
+                                 + MiddleButtonsWidth + RightGroupWidth;
+                float totalFlex  = Mathf.Max(0f, windowWidth - totalFixed);
+                float eachFlex   = totalFlex / 2f;
 
-            // Right edge of the dropdown, measured from the window's right edge:
-            //   RightGroup + FlexSpace2 + MiddleButtons
-            // Our button sits just left of that (i.e. between dropdown and middle).
-            float rightOffset = RightGroupWidth + eachFlex + MiddleButtonsWidth;
+                // Right edge of the dropdown, measured from the window's right edge:
+                //   RightGroup + FlexSpace2 + MiddleButtons
+                // Our button sits just left of that (i.e. between dropdown and middle).
+                float rightOffset = RightGroupWidth + eachFlex + MiddleButtonsWidth;
 
-            return Mathf.Max(0f, rightOffset);
+                return Mathf.Max(0f, rightOffset);
+            }
+            catch { return 180f; }
         }
 
         // ================================================================
