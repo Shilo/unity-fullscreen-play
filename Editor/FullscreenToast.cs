@@ -79,13 +79,9 @@ namespace Shilo.FullscreenPlay.Editor
                     var hwnd = FindWindowByTitle("FullscreenPlayToast");
                     if (hwnd != System.IntPtr.Zero)
                     {
+                        FullscreenGameView.BringWindowToTop(hwnd);
                         MakeClickThrough(hwnd);
-                        FullscreenGameView.SetWindowTopMost(hwnd);
                     }
-                    // Keep focus on the fullscreen GameView so that
-                    // aspect-ratio layout is never disrupted by the
-                    // toast popup gaining or releasing focus.
-                    FullscreenGameView.RefocusFullscreenWindow();
                 }
                 catch { /* silent */ }
             };
@@ -143,8 +139,7 @@ namespace Shilo.FullscreenPlay.Editor
                 {
                     var hwnd = FindWindowByTitle("FullscreenPlayToast");
                     if (hwnd != System.IntPtr.Zero)
-                        FullscreenGameView.SetWindowTopMost(hwnd);
-                    FullscreenGameView.RefocusFullscreenWindow();
+                        FullscreenGameView.BringWindowToTop(hwnd);
                 }
                 catch { /* silent */ }
 #endif
@@ -161,6 +156,13 @@ namespace Shilo.FullscreenPlay.Editor
             if (s_Instance != null)
             {
                 EditorApplication.update -= s_Instance.Tick;
+
+                // Focus the fullscreen window BEFORE closing the toast so
+                // that Windows keeps it as the foreground window. Without
+                // this, Close() shifts focus to the main editor, which
+                // causes GameView to recalculate aspect-ratio layout.
+                FullscreenGameView.RefocusFullscreenWindow();
+
                 s_Instance.Close();
                 s_Instance = null;
             }
