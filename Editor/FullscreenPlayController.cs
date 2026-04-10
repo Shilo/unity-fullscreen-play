@@ -43,7 +43,7 @@ namespace Shilo.FullscreenPlay.Editor
             if (FullscreenGameView.IsFullscreen)
                 FullscreenGameView.ExitFullscreen();
 
-            // Remove injected toolbar overlays from GameView visual trees.
+            // Remove injected toolbar buttons from GameView visual trees.
             GameViewToolbarInjector.RemoveAllButtons();
         }
 

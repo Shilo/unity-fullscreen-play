@@ -24,7 +24,7 @@ namespace Shilo.FullscreenPlay.Editor
     {
         // ----- constants -----
 
-        private const string OverlayName = "fullscreen-play-toggle-button";
+        private const string ButtonName = "fullscreen-play-toggle-button";
         private const float ButtonWidth = 28f;
         private const float ButtonHeight = 18f;
         private const float ButtonTopOffset = 1f;
@@ -153,7 +153,7 @@ namespace Shilo.FullscreenPlay.Editor
 
                         var root = window.rootVisualElement;
                         if (root == null) continue;
-                        if (root.Q(OverlayName) != null) continue;
+                        if (root.Q(ButtonName) != null) continue;
 
                         Inject(window, root);
                     }
@@ -183,7 +183,7 @@ namespace Shilo.FullscreenPlay.Editor
                     catch { /* silent no-op */ }
                 });
 
-                button.name        = OverlayName;
+                button.name        = ButtonName;
                 button.pickingMode = PickingMode.Position;
 
                 button.style.position = Position.Absolute;
@@ -352,7 +352,7 @@ namespace Shilo.FullscreenPlay.Editor
                         if (window == null) continue;
 
                         var root = window.rootVisualElement;
-                        var button = root?.Q(OverlayName);
+                        var button = root?.Q(ButtonName);
                         button?.RemoveFromHierarchy();
                     }
                     catch { /* silent no-op */ }
