@@ -79,9 +79,13 @@ namespace Shilo.FullscreenPlay.Editor
                     var hwnd = FindWindowByTitle("FullscreenPlayToast");
                     if (hwnd != System.IntPtr.Zero)
                     {
-                        FullscreenGameView.BringWindowToTop(hwnd);
                         MakeClickThrough(hwnd);
+                        FullscreenGameView.SetWindowTopMost(hwnd);
                     }
+                    // Keep focus on the fullscreen GameView so that
+                    // aspect-ratio layout is never disrupted by the
+                    // toast popup gaining or releasing focus.
+                    FullscreenGameView.RefocusFullscreenWindow();
                 }
                 catch { /* silent */ }
             };
@@ -139,7 +143,8 @@ namespace Shilo.FullscreenPlay.Editor
                 {
                     var hwnd = FindWindowByTitle("FullscreenPlayToast");
                     if (hwnd != System.IntPtr.Zero)
-                        FullscreenGameView.BringWindowToTop(hwnd);
+                        FullscreenGameView.SetWindowTopMost(hwnd);
+                    FullscreenGameView.RefocusFullscreenWindow();
                 }
                 catch { /* silent */ }
 #endif

@@ -121,6 +121,12 @@ namespace Shilo.FullscreenPlay.Editor
             }
         }
 
+        public static void RefocusFullscreenWindow()
+        {
+            if (s_FullscreenWindow != null)
+                s_FullscreenWindow.Focus();
+        }
+
         public static void ToggleFullscreen()
         {
             if (IsFullscreen)
@@ -303,15 +309,17 @@ namespace Shilo.FullscreenPlay.Editor
             s_WindowHandle = IntPtr.Zero;
         }
 
+        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+
         /// <summary>
-        /// Brings the given HWND to the top of the z-order (above the
-        /// fullscreen window) without pinning it permanently.
-        /// Used to ensure the toast popup appears above the game.
+        /// Pins the given HWND as topmost so it stays above all other
+        /// windows regardless of focus. Used for the toast overlay so
+        /// the fullscreen GameView can keep focus without covering it.
         /// </summary>
-        internal static void BringWindowToTop(IntPtr hwnd)
+        internal static void SetWindowTopMost(IntPtr hwnd)
         {
             if (hwnd == IntPtr.Zero) return;
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
 #endif
     }
