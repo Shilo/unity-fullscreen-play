@@ -156,7 +156,6 @@ unity-fullscreen-play/
     ├── FullscreenPlayController.cs           # Menu items, shortcuts, play mode hooks
     ├── FullscreenPlaySettings.cs             # Settings + preferences UI
     ├── FullscreenToast.cs                    # Toast notification overlay (MD3 flat dark theme)
-    ├── GameViewToolbarInjector.cs            # Dropdown injection into GameView toolbar
     ├── PackageUpdater.cs                     # One-click update check via UPM Client API
     ├── I18n.cs                               # File-based internationalization
     └── Locales/
@@ -230,9 +229,8 @@ F11 is registered via both `[Shortcut]` (for discoverability in Edit > Shortcuts
 `AssemblyReloadEvents.beforeAssemblyReload` fires before domain reload (script recompilation, package disable/re-enable). The handler:
 1. Unhooks the `globalEventHandler` reflection delegate so it doesn't reference an unloaded assembly
 2. Closes any open fullscreen window
-3. Calls `GameViewToolbarInjector.RemoveAllOverlays()` to remove all injected `IMGUIContainer` elements from GameView visual trees
 
-This ensures zero stale delegates, zero orphaned visual elements, and zero errors when the package is disabled, re-enabled, or scripts recompile.
+This ensures zero stale delegates and zero errors when the package is disabled, re-enabled, or scripts recompile.
 
 #### 3. FullscreenPlaySettings.cs - Configuration
 
@@ -275,31 +273,7 @@ Provides a one-click update mechanism accessible via `Tools > Fullscreen Play > 
 
 All user-facing strings (progress messages, error messages, success confirmation) are localized via `I18n.Tr()`.
 
-#### 6. GameViewToolbarInjector.cs - The Dropdown
-
-Injects "Play Fullscreen" as a fourth option into the GameView's play-mode dropdown (alongside Play Focused, Play Maximized, Play Unfocused).
-
-**The challenge:** The original dropdown is rendered via `EditorGUILayout.EnumPopup` driven by the `EnterPlayModeBehavior` enum. `EnumPopup` generates its items strictly from enum values — there is no extensibility hook, no `GenericMenu` to append to, and `DoToolbarGUI()` is private.
-
-**The solution:** Overlay an opaque `IMGUIContainer` (UIToolkit) on top of the original dropdown. The overlay draws an identical `EditorGUI.DropdownButton` styled with `EditorStyles.toolbarDropDown` that opens a `GenericMenu` containing all four options.
-
-**Detection (event-driven, no polling):**
-- `EditorWindow.windowFocusChanged` — fires when any window gains focus; new GameViews always receive focus on creation
-- `EditorApplication.playModeStateChanged` — GameViews may be recreated on mode change
-- `DetachFromPanelEvent` on the overlay — triggers re-injection if the overlay is removed (domain reload, window rebuild)
-- `EditorApplication.delayCall` — one initial scan at startup
-- Multiple rapid triggers collapse into a single scan via a `s_ScanScheduled` flag
-
-**Positioning (dynamic, width-adaptive):**
-The toolbar layout from `DoToolbarGUI()` source is:
-```
-[LeftGroup] [FlexSpace1] [Dropdown 110px] [MiddleButtons] [FlexSpace2] [RightGroup]
-```
-The two `GUILayout.FlexibleSpace()` calls split remaining horizontal space equally. RightGroup (Audio, Shortcuts, Stats, Gizmos) and MiddleButtons (Frame Debugger) have deterministic widths. LeftGroup (display/resolution popups, zoom slider) is estimated. The `style.right` offset is recalculated on every `GeometryChangedEvent` (window resize). Any estimation error from the left-side width is halved by the flex-space split, and the overlay's extra width (140 vs 110 px) absorbs the remainder.
-
-**Forward compatibility:** Every reflection access, visual tree operation, and drawing callback is individually wrapped in `try/catch`. If any internal API changes, the injector silently disables itself. The file is fully self-contained — deleting `GameViewToolbarInjector.cs` removes the feature entirely with no impact on other components.
-
-#### 7. I18n.cs - Internationalization
+#### 6. I18n.cs - Internationalization
 
 File-based internationalization system that loads JSON locale files from `Editor/Locales/{lang}.json`. Supports 14 languages via `SystemLanguage` enum mapping. English (`en.json`) is always loaded as the fallback; the current editor language file is loaded on top, overriding matching keys.
 
@@ -359,13 +333,11 @@ When Unity recompiles scripts or a package is disabled, a domain reload occurs �
 **Before reload** (`AssemblyReloadEvents.beforeAssemblyReload`):
 1. Unhook the `globalEventHandler` reflection delegate (prevents stale delegate references)
 2. Close the fullscreen popup window if open
-3. Remove all injected `IMGUIContainer` overlays from GameView visual trees (prevents dead callbacks)
 
 **After reload** (`[InitializeOnLoad]` static constructor):
-1. Re-subscribe managed events (`playModeStateChanged`, `windowFocusChanged`)
+1. Re-subscribe managed events (`playModeStateChanged`)
 2. Re-hook the `globalEventHandler`
-3. Re-inject toolbar overlays into GameView instances
-4. If not in play mode, call `FullscreenGameView.Cleanup()` to clear orphaned state
+3. If not in play mode, call `FullscreenGameView.Cleanup()` to clear orphaned state
 
 This two-phase approach ensures:
 - **Package disable:** `beforeAssemblyReload` runs, cleans up all external state, then the assembly unloads cleanly. No stale delegates or visual elements remain.
@@ -412,21 +384,7 @@ Since we cannot modify the internal GameView's rendering pipeline, a separate sm
 
 Focus management is critical: after showing the toast, we immediately return focus to the GameView so game input works. The toast is non-interactive - it only displays information.
 
-### Decision 6: Toolbar Dropdown Integration via UIToolkit Overlay
-
-**Chose: Overlay injection with menu-item fallback.**
-
-The play-mode dropdown (`Play Focused / Play Maximized / Play Unfocused`) is rendered by `EditorGUILayout.EnumPopup` inside `GameView.DoToolbarGUI()`. `EnumPopup` is driven by enum values and cannot be extended. Three strategies were considered:
-
-1. **Harmony patching** of `DoToolbarGUI()` — would allow arbitrary injection but adds an external dependency and is fragile across Unity versions.
-2. **ContainerWindow / Overlay API** — Unity's `[Overlay]` attribute requires a compile-time `Type` parameter, and `GameView` is internal. Runtime overlay registration is not publicly supported.
-3. **UIToolkit overlay on top of IMGUI** — place an opaque `IMGUIContainer` in the GameView's `rootVisualElement` that draws an identical dropdown covering the original.
-
-Option 3 was chosen. It requires no external dependencies, uses only public APIs (`IMGUIContainer`, `EditorGUI.DropdownButton`, `GenericMenu`), and the positioning can be calculated dynamically from the known toolbar layout structure. The overlay is wider than the original (140 vs 110 px) to absorb positioning estimation error.
-
-The `Tools > Fullscreen Play` menu and F11 shortcut remain as universal fallbacks — they work even if the overlay injection silently fails due to an API change.
-
-### Decision 7: UPM Package at Repo Root
+### Decision 6: UPM Package at Repo Root
 
 **Chose: Root-level package.json.**
 
@@ -482,9 +440,6 @@ The `FullscreenMode.ExclusiveFullscreen` enum value exists in code but is not ye
 - Graceful handling of multi-monitor setups where only one display changes resolution
 - Windows-only behind `#if UNITY_EDITOR_WIN` (macOS/Linux have no equivalent editor-safe API)
 
-### Toolbar Dropdown Overlay Positioning
-The `GameViewToolbarInjector` overlay position is calculated from the known toolbar layout structure, but the left-side element width (display popup, resolution popup, zoom slider) is estimated. Any estimation error is halved by the flex-space split and absorbed by the overlay's extra width. In rare configurations (e.g., XR mode active, RenderDoc attached), additional conditional toolbar buttons may shift the dropdown further. If the overlay visually misaligns, it remains functional — and the Tools menu / F11 shortcut always work. Adjust `EstimatedLeftGroupWidth` in `GameViewToolbarInjector.cs` to fine-tune for a specific setup.
-
 ### GameView Toolbar Property
 The `showToolbar` property accessed via reflection is internal to Unity and may change or be removed in future versions. If the property is not found, the toolbar will simply remain visible - the fullscreen experience still works, just with a small toolbar at the top.
 
@@ -529,14 +484,13 @@ Without a tag, Unity resolves `HEAD` of the default branch, which may include un
 - Graceful fallbacks when reflection targets are missing
 
 **The implementation is focused:**
-- 7 C# files + 2 JSON locale files
+- 6 C# files + 2 JSON locale files
 - Zero runtime footprint (editor-only assembly)
 - No dependencies beyond Unity itself
 - Installs via a single Git URL
 
 **What it achieves:**
 - True fullscreen game testing without building
-- "Play Fullscreen" option in the GameView's play-mode dropdown
 - Familiar UX (Esc/F11, toast notification like browser fullscreen)
 - Configurable behavior through Unity's native Preferences UI
 - Rebindable hotkey through Unity's native Shortcuts Manager
