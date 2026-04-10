@@ -13,6 +13,8 @@ namespace Shilo.FullscreenPlay.Editor
     {
         private static FullscreenToast s_Instance;
 
+        public static bool IsVisible => s_Instance != null;
+
         private double _startTime;
         private float _duration;
         private VisualElement _root;

@@ -179,7 +179,28 @@ namespace Shilo.FullscreenPlay.Editor
         private static void OnGlobalEvent()
         {
             var e = Event.current;
-            if (e == null || e.type != EventType.KeyDown) return;
+            if (e == null) return;
+
+            // Click anywhere to dismiss the toast without consuming the
+            // event — the mouse press still reaches the game as normal.
+            if (e.type == EventType.MouseDown
+                && FullscreenGameView.IsFullscreen
+                && FullscreenToast.IsVisible)
+            {
+                FullscreenToast.Hide();
+            }
+
+            if (e.type != EventType.KeyDown) return;
+
+            // Intercept OS quit/close shortcuts (Alt+F4, Cmd+Q, Cmd+W, Ctrl+Q)
+            // so they exit fullscreen instead of closing the editor.
+            // Users may assume the fullscreen view is a separate window.
+            if (FullscreenGameView.IsFullscreen && IsCloseOrQuitShortcut(e))
+            {
+                FullscreenGameView.ExitFullscreen();
+                e.Use();
+                return;
+            }
 
             // Escape: exit fullscreen (only when fullscreen is active)
             if (e.keyCode == KeyCode.Escape && FullscreenGameView.IsFullscreen)
@@ -199,6 +220,24 @@ namespace Shilo.FullscreenPlay.Editor
                 FullscreenGameView.ToggleFullscreen();
                 e.Use();
             }
+        }
+
+        private static bool IsCloseOrQuitShortcut(Event e)
+        {
+#if UNITY_EDITOR_WIN
+            // Alt+F4
+            return e.keyCode == KeyCode.F4 && e.alt;
+#elif UNITY_EDITOR_OSX
+            // Cmd+Q (quit app) or Cmd+W (close window)
+            return e.command
+                && (e.keyCode == KeyCode.Q || e.keyCode == KeyCode.W);
+#elif UNITY_EDITOR_LINUX
+            // Alt+F4 or Ctrl+Q
+            return (e.keyCode == KeyCode.F4 && e.alt)
+                || (e.keyCode == KeyCode.Q && e.control);
+#else
+            return false;
+#endif
         }
     }
 }
