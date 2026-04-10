@@ -27,5 +27,8 @@
   "update_check_failed": "Failed to check for updates:\n{0}",
   "update_not_found": "Could not find the installed package. It may have been embedded or installed manually.",
   "update_failed": "Update failed:\n{0}",
-  "update_success": "Package updated to version {0}."
+  "update_success": "Package updated to version {0}.",
+
+  "fullscreen_button_tooltip_enabled": "Auto-Fullscreen on Play (Enabled)",
+  "fullscreen_button_tooltip_disabled": "Auto-Fullscreen on Play (Disabled)"
 }
