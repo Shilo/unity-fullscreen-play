@@ -73,15 +73,9 @@ namespace Shilo.FullscreenPlay.Editor
             // Copy target display and resolution settings from the existing GameView
             CopyGameViewSettings(s_FullscreenWindow);
 
-            // Show toast notification (delayed one frame so it layers on top)
+            // Show toast notification (overlay on the fullscreen window)
             if (FullscreenPlaySettings.ShowToast)
-            {
-                EditorApplication.delayCall += () =>
-                {
-                    if (!IsFullscreen) return;
-                    FullscreenToast.Show(s_FullscreenRect);
-                };
-            }
+                FullscreenToast.Show(s_FullscreenWindow);
 
             // Listen for app-level focus changes (alt-tab back) to re-show toast.
             // EditorApplication.focusChanged fires when the entire Unity app
@@ -117,14 +111,8 @@ namespace Shilo.FullscreenPlay.Editor
             if (FullscreenPlaySettings.ShowToast
                 && FullscreenPlaySettings.ShowToastOnRefocus)
             {
-                FullscreenToast.ResetTimer(s_FullscreenRect);
+                FullscreenToast.ResetTimer(s_FullscreenWindow);
             }
-        }
-
-        public static void RefocusFullscreenWindow()
-        {
-            if (s_FullscreenWindow != null)
-                s_FullscreenWindow.Focus();
         }
 
         public static void ToggleFullscreen()
@@ -141,6 +129,7 @@ namespace Shilo.FullscreenPlay.Editor
         public static void Cleanup()
         {
             EditorApplication.focusChanged -= OnAppFocusChanged;
+            FullscreenToast.Hide();
             if (s_FullscreenWindow != null)
             {
                 try { s_FullscreenWindow.Close(); }
@@ -277,12 +266,6 @@ namespace Shilo.FullscreenPlay.Editor
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
-        /// <summary>
-        /// Exposes GetForegroundWindow for use by FullscreenToast to find
-        /// its own HWND and bring it above the fullscreen window.
-        /// </summary>
-        internal static IntPtr GetForegroundWindowHandle() => GetForegroundWindow();
-
         private static void MakeWindowFullscreen(Rect rect)
         {
             s_WindowHandle = GetPopupWindowHandle();
@@ -309,16 +292,6 @@ namespace Shilo.FullscreenPlay.Editor
             s_WindowHandle = IntPtr.Zero;
         }
 
-        /// <summary>
-        /// Brings the given HWND to the top of the z-order (above the
-        /// fullscreen window) without pinning it permanently.
-        /// Used to ensure the toast popup appears above the game.
-        /// </summary>
-        internal static void BringWindowToTop(IntPtr hwnd)
-        {
-            if (hwnd == IntPtr.Zero) return;
-            SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-        }
 #endif
     }
 }
