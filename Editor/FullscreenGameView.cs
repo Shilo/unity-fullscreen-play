@@ -222,36 +222,19 @@ namespace Shilo.FullscreenPlay.Editor
         [DllImport("user32.dll")]
         private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
-        private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
-
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
-        private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd,
-            uint msg, IntPtr wParam, IntPtr lParam);
-
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        private delegate IntPtr WndProcDelegate(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
         private static readonly IntPtr HWND_TOP = IntPtr.Zero;
+        private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
         private const uint SWP_SHOWWINDOW = 0x0040;
         private const uint SWP_NOSIZE = 0x0001;
         private const uint SWP_NOMOVE = 0x0002;
         private const int GWL_STYLE = -16;
         private const int WS_POPUP = unchecked((int)0x80000000);
         private const int WS_VISIBLE = 0x10000000;
-        private const int GWLP_WNDPROC = -4;
-        private const uint WM_SYSCOMMAND = 0x0112;
-        private const uint WM_CLOSE = 0x0010;
-        private const long SC_CLOSE = 0xF060;
 
         private static IntPtr s_WindowHandle;
-        private static IntPtr s_OriginalWndProc;
-        private static WndProcDelegate s_WndProcDelegate;
 
         /// <summary>
         /// Gets the native window handle for the fullscreen popup.
@@ -302,51 +285,11 @@ namespace Shilo.FullscreenPlay.Editor
             // the taskbar on initial show but allows alt-tab to bring other
             // windows in front.
             SetWindowPos(s_WindowHandle, HWND_TOP, x, y, w, h, SWP_SHOWWINDOW);
-
-            // Subclass the popup to intercept Alt+F4 (WM_CLOSE / WM_SYSCOMMAND
-            // SC_CLOSE). Without this, Alt+F4 closes the entire Unity editor
-            // because the popup is the foreground window.
-            SubclassWindow();
         }
 
         private static void RestoreWindow()
         {
-            UnsubclassWindow();
             s_WindowHandle = IntPtr.Zero;
-        }
-
-        private static void SubclassWindow()
-        {
-            if (s_WindowHandle == IntPtr.Zero) return;
-
-            s_WndProcDelegate = FullscreenWndProc;
-            s_OriginalWndProc = GetWindowLongPtr(s_WindowHandle, GWLP_WNDPROC);
-
-            var newWndProc = Marshal.GetFunctionPointerForDelegate(s_WndProcDelegate);
-            SetWindowLongPtr(s_WindowHandle, GWLP_WNDPROC, newWndProc);
-        }
-
-        private static void UnsubclassWindow()
-        {
-            if (s_WindowHandle == IntPtr.Zero || s_OriginalWndProc == IntPtr.Zero) return;
-
-            SetWindowLongPtr(s_WindowHandle, GWLP_WNDPROC, s_OriginalWndProc);
-            s_OriginalWndProc = IntPtr.Zero;
-            s_WndProcDelegate = null;
-        }
-
-        private static IntPtr FullscreenWndProc(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam)
-        {
-            if (msg == WM_CLOSE
-                || (msg == WM_SYSCOMMAND && (wParam.ToInt64() & 0xFFF0) == SC_CLOSE))
-            {
-                // Exit fullscreen on next frame instead of closing the editor.
-                // delayCall avoids reentrancy (we're inside the WndProc).
-                EditorApplication.delayCall += ExitFullscreen;
-                return IntPtr.Zero;
-            }
-
-            return CallWindowProc(s_OriginalWndProc, hWnd, msg, wParam, lParam);
         }
 
 #endif
