@@ -27,9 +27,47 @@ namespace Shilo.FullscreenPlay.Editor
             // persisting into a domain that no longer contains our assembly.
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
 
-            // Safety: clean up stale fullscreen state after domain reload
+            // Safety: clean up stale fullscreen state after domain reload.
+            // Try three approaches — first one to succeed cancels the others:
+            //   1. Immediate: works during mid-session domain reloads
+            //   2. Update loop: checks each frame for ~10 frames (fast)
+            //   3. delayCall: guaranteed fallback once editor is fully active
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
+            {
                 FullscreenGameView.Cleanup();
+                s_OrphanCleanupPending = true;
+                s_CleanupRetries = 10;
+                EditorApplication.update += RetryCleanup;
+                EditorApplication.delayCall += DelayedCleanup;
+            }
+        }
+
+        private static bool s_OrphanCleanupPending;
+        private static int s_CleanupRetries;
+
+        private static void StopOrphanCleanup()
+        {
+            s_OrphanCleanupPending = false;
+            EditorApplication.update -= RetryCleanup;
+        }
+
+        private static void RetryCleanup()
+        {
+            if (!s_OrphanCleanupPending || --s_CleanupRetries <= 0
+                || EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorApplication.update -= RetryCleanup;
+                return;
+            }
+            if (FullscreenGameView.CloseOrphanedFullscreenWindows())
+                StopOrphanCleanup();
+        }
+
+        private static void DelayedCleanup()
+        {
+            if (!s_OrphanCleanupPending) return;
+            FullscreenGameView.CloseOrphanedFullscreenWindows();
+            StopOrphanCleanup();
         }
 
         // ---- Quit interception ----
@@ -45,7 +83,6 @@ namespace Shilo.FullscreenPlay.Editor
         {
             if (FullscreenGameView.IsFullscreen)
             {
-                Debug.Log("[Fullscreen Play] Quit intercepted — exiting fullscreen instead.");
                 FullscreenGameView.ExitFullscreen();
                 return false;
             }

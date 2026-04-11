@@ -143,15 +143,17 @@ namespace Shilo.FullscreenPlay.Editor
             if (s_FullscreenWindow != null)
             {
                 try { s_FullscreenWindow.Close(); }
-                catch { /* silent — window may already be destroyed */ }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[Fullscreen Play] Failed to close fullscreen window: {e.Message}");
+                }
             }
 
-            // Always check for orphaned fullscreen windows on startup.
-            // After a hard exit (crash, killed process, EditorApplication.Exit)
-            // the static reference is null but the popup may survive in the
-            // restored layout. The EditorPrefs flag is a hint but may not be
-            // flushed to disk before a crash, so we also check by position.
-            CloseOrphanedFullscreenWindows();
+            // Orphaned windows from a hard exit are closed by the update
+            // loop and delayCall in FullscreenPlayController — NOT here.
+            // Close() during [InitializeOnLoad] destroys the managed
+            // EditorWindow but leaves the native window on screen, making
+            // it unfindable by the time the proper cleanup runs.
 
             s_FullscreenWindow = null;
             s_FullscreenRect = Rect.zero;
@@ -162,32 +164,43 @@ namespace Shilo.FullscreenPlay.Editor
         /// Finds GameView windows left over from a hard exit by looking for
         /// extra instances beyond the user's original docked Game tab.
         /// </summary>
-        private static void CloseOrphanedFullscreenWindows()
+        /// <returns>true if an orphan was found and closed.</returns>
+        internal static bool CloseOrphanedFullscreenWindows()
         {
-            if (GameViewType == null) return;
-
-            var allGameViews = Resources.FindObjectsOfTypeAll(GameViewType);
-            if (allGameViews.Length <= 1) return;
-
-            // The orphaned popup sits at (0,0) covering the full screen.
-            // Close any GameView whose position starts at the origin and
-            // spans the full screen width — that's our leftover popup.
-            var res = Screen.currentResolution;
-            float scale = EditorGUIUtility.pixelsPerPoint;
-            float screenW = res.width / scale;
-
-            foreach (var obj in allGameViews)
+            try
             {
-                var win = obj as EditorWindow;
-                if (win == null) continue;
+                if (GameViewType == null) return false;
 
-                var pos = win.position;
-                if (pos.x == 0 && pos.y == 0 && pos.width >= screenW)
+                var allGameViews = Resources.FindObjectsOfTypeAll(GameViewType);
+                if (allGameViews.Length <= 1) return false;
+
+                // The orphaned popup sits at (0,0) covering the full screen.
+                // Close any GameView whose position starts at the origin and
+                // spans the full screen width — that's our leftover popup.
+                var res = Screen.currentResolution;
+                float scale = EditorGUIUtility.pixelsPerPoint;
+                float screenW = res.width / scale;
+                bool closed = false;
+
+                foreach (var obj in allGameViews)
                 {
-                    Debug.Log("[Fullscreen Play] Closing orphaned fullscreen window from previous session.");
-                    try { win.Close(); }
-                    catch { /* silent */ }
+                    var win = obj as EditorWindow;
+                    if (win == null) continue;
+
+                    var pos = win.position;
+                    if (pos.x == 0 && pos.y == 0 && pos.width >= screenW)
+                    {
+                        Debug.Log("[Fullscreen Play] Closing orphaned fullscreen window from previous session.");
+                        win.Close();
+                        closed = true;
+                    }
                 }
+                return closed;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[Fullscreen Play] Orphan cleanup failed: {e.Message}");
+                return false;
             }
         }
 
