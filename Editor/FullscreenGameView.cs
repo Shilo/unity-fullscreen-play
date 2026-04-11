@@ -188,22 +188,10 @@ namespace Shilo.FullscreenPlay.Editor
                 if (sourceView == null) return;
 
                 // Copy targetDisplay via reflection
-                var targetDisplayProp = GameViewType.GetProperty("targetDisplay",
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (targetDisplayProp != null)
-                {
-                    var displayValue = targetDisplayProp.GetValue(sourceView);
-                    targetDisplayProp.SetValue(fullscreenView, displayValue);
-                }
+                CopyProperty(sourceView, fullscreenView, "targetDisplay");
 
                 // Copy selected size index (resolution/aspect ratio)
-                var selectedSizeIndexProp = GameViewType.GetProperty("selectedSizeIndex",
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (selectedSizeIndexProp != null)
-                {
-                    var sizeValue = selectedSizeIndexProp.GetValue(sourceView);
-                    selectedSizeIndexProp.SetValue(fullscreenView, sizeValue);
-                }
+                CopyProperty(sourceView, fullscreenView, "selectedSizeIndex");
 
                 // Copy Gizmos visibility state
                 var playModeViewType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.PlayModeView");
@@ -253,6 +241,22 @@ namespace Shilo.FullscreenPlay.Editor
             }
         }
 
+        /// <summary>
+        /// Copies a property value between GameView instances via reflection.
+        /// </summary>
+        private static void CopyProperty(EditorWindow source, EditorWindow target, string propertyName)
+        {
+            var prop = GameViewType.GetProperty(propertyName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (prop != null)
+                prop.SetValue(target, prop.GetValue(source));
+        }
+
+        /// <summary>
+        /// Copies a field value between GameView instances via reflection.
+        /// Only safe for value types and immutable references — mutable
+        /// reference types (e.g. arrays) need manual cloning.
+        /// </summary>
         private static void CopyField(EditorWindow source, EditorWindow target, string fieldName)
         {
             var field = GameViewType.GetField(fieldName,
