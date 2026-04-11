@@ -12,6 +12,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle auto-fullscreen on play setting
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
+- **Gizmos support** — fullscreen mirrors your Game view's Gizmos toggle (colliders, icons, etc.)
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)

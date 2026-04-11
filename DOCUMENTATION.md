@@ -76,6 +76,7 @@ https://gist.github.com/fnuecke/d4275087cc7969257eae0f939fac3d2f
 - Hides the GameView toolbar via reflection on `showToolbar` property
 - Toggle via menu shortcut (Ctrl+Shift+Alt+2)
 - No settings, no toast, no play mode integration
+- Does not copy Gizmos state — new GameView always starts with Gizmos off
 
 **Key code pattern:**
 ```csharp
@@ -92,6 +93,7 @@ instance.Focus();
 - Repositions and resizes the existing window instead of creating a new one
 - Hides toolbar by offsetting Y position by -22px (fragile hack)
 - Uses deprecated `playmodeStateChanged` API (pre-2018)
+- Gizmos state is preserved (same window instance), but the approach is fragile and deprecated
 
 ### Technical Approaches Analyzed
 
@@ -200,6 +202,8 @@ ExitFullscreen()
 - `GameViewType.GetProperty("showToolbar", NonPublic | Instance)` - hides the toolbar
 - `GameViewType.GetProperty("targetDisplay", ...)` - copies display target
 - `GameViewType.GetProperty("selectedSizeIndex", ...)` - copies resolution/aspect settings
+- `PlayModeViewType.GetMethod("IsShowingGizmos")` / `SetShowGizmos()` - copies Gizmos visibility
+- `GameViewType.GetField("m_Gizmos", ...)` - sets the Gizmos backing field to match toolbar state
 
 #### 2. FullscreenPlayController.cs - The Brain
 
@@ -323,6 +327,9 @@ When creating a new GameView instance, it starts with default settings (Display 
 
 - **targetDisplay** - which camera display to render (Display 1, 2, etc.)
 - **selectedSizeIndex** - which resolution/aspect ratio preset is selected
+- **Gizmos visibility** - whether Gizmos (colliders, icons, etc.) are drawn over the game
+
+Gizmos copying involves two levels: `m_Gizmos` on `GameView` (the toolbar toggle's backing field) and `SetShowGizmos()` on the `PlayModeView` base class (what the renderer reads). Both are set so the fullscreen view's Gizmos state matches the source Game tab exactly.
 
 This ensures the fullscreen view renders identically to what the user was seeing in their Game tab.
 
