@@ -204,6 +204,23 @@ namespace Shilo.FullscreenPlay.Editor
                     var sizeValue = selectedSizeIndexProp.GetValue(sourceView);
                     selectedSizeIndexProp.SetValue(fullscreenView, sizeValue);
                 }
+
+                // Copy Gizmos visibility state
+                var playModeViewType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.PlayModeView");
+                if (playModeViewType != null)
+                {
+                    var isShowingGizmos = playModeViewType.GetMethod("IsShowingGizmos");
+                    if (isShowingGizmos != null)
+                    {
+                        bool gizmos = (bool)isShowingGizmos.Invoke(sourceView, null);
+                        var gizmosField = GameViewType.GetField("m_Gizmos",
+                            BindingFlags.NonPublic | BindingFlags.Instance);
+                        gizmosField?.SetValue(fullscreenView, gizmos);
+
+                        var setShowGizmos = playModeViewType.GetMethod("SetShowGizmos");
+                        setShowGizmos?.Invoke(fullscreenView, new object[] { gizmos });
+                    }
+                }
             }
             catch (Exception e)
             {
