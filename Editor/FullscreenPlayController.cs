@@ -18,6 +18,7 @@ namespace Shilo.FullscreenPlay.Editor
         static FullscreenPlayController()
         {
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+            EditorApplication.wantsToQuit += OnWantsToQuit;
             HookGlobalEventHandler();
 
             // Clean up all injected state before the next domain reload
@@ -29,6 +30,26 @@ namespace Shilo.FullscreenPlay.Editor
             // Safety: clean up stale fullscreen state after domain reload
             if (!EditorApplication.isPlayingOrWillChangePlaymode)
                 FullscreenGameView.Cleanup();
+        }
+
+        // ---- Quit interception ----
+
+        /// <summary>
+        /// Intercepts application-level quit shortcuts (Cmd+Q on macOS,
+        /// Ctrl+Q on Linux, File > Quit) while fullscreen is active.
+        /// Exits fullscreen and cancels the quit so the editor stays open.
+        /// Note: Alt+F4 on Windows already closes just the popup window
+        /// (native Win32 behavior) and does not trigger this callback.
+        /// </summary>
+        private static bool OnWantsToQuit()
+        {
+            if (FullscreenGameView.IsFullscreen)
+            {
+                Debug.Log("[Fullscreen Play] Quit intercepted — exiting fullscreen instead.");
+                FullscreenGameView.ExitFullscreen();
+                return false;
+            }
+            return true;
         }
 
         // ---- Cleanup ----

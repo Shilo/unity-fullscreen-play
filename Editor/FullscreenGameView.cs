@@ -77,6 +77,10 @@ namespace Shilo.FullscreenPlay.Editor
             if (FullscreenPlaySettings.ShowToast)
                 FullscreenToast.Show(s_FullscreenWindow);
 
+            // Track fullscreen state in EditorPrefs so Cleanup() can find
+            // orphaned popup windows after a hard exit (crash, Exit(0), etc.).
+            EditorPrefs.SetBool("FullscreenPlay.Active", true);
+
             // Listen for app-level focus changes (alt-tab back) to re-show toast.
             // EditorApplication.focusChanged fires when the entire Unity app
             // gains/loses OS focus — NOT when clicking between editor windows.
@@ -101,6 +105,7 @@ namespace Shilo.FullscreenPlay.Editor
             }
 
             s_FullscreenRect = Rect.zero;
+            EditorPrefs.DeleteKey("FullscreenPlay.Active");
         }
 
         private static void OnAppFocusChanged(bool focused)
@@ -125,18 +130,65 @@ namespace Shilo.FullscreenPlay.Editor
 
         /// <summary>
         /// Called during domain reload or editor startup to clean up orphaned state.
+        /// After a hard exit (crash, EditorApplication.Exit, etc.) the static
+        /// s_FullscreenWindow reference is null but the popup window may still
+        /// exist in the restored layout. The EditorPrefs flag lets us detect
+        /// this and close the orphaned window.
         /// </summary>
         public static void Cleanup()
         {
             EditorApplication.focusChanged -= OnAppFocusChanged;
             FullscreenToast.Hide();
+
             if (s_FullscreenWindow != null)
             {
                 try { s_FullscreenWindow.Close(); }
                 catch { /* silent — window may already be destroyed */ }
             }
+
+            // Always check for orphaned fullscreen windows on startup.
+            // After a hard exit (crash, killed process, EditorApplication.Exit)
+            // the static reference is null but the popup may survive in the
+            // restored layout. The EditorPrefs flag is a hint but may not be
+            // flushed to disk before a crash, so we also check by position.
+            CloseOrphanedFullscreenWindows();
+
             s_FullscreenWindow = null;
             s_FullscreenRect = Rect.zero;
+            EditorPrefs.DeleteKey("FullscreenPlay.Active");
+        }
+
+        /// <summary>
+        /// Finds GameView windows left over from a hard exit by looking for
+        /// extra instances beyond the user's original docked Game tab.
+        /// </summary>
+        private static void CloseOrphanedFullscreenWindows()
+        {
+            if (GameViewType == null) return;
+
+            var allGameViews = Resources.FindObjectsOfTypeAll(GameViewType);
+            if (allGameViews.Length <= 1) return;
+
+            // The orphaned popup sits at (0,0) covering the full screen.
+            // Close any GameView whose position starts at the origin and
+            // spans the full screen width — that's our leftover popup.
+            var res = Screen.currentResolution;
+            float scale = EditorGUIUtility.pixelsPerPoint;
+            float screenW = res.width / scale;
+
+            foreach (var obj in allGameViews)
+            {
+                var win = obj as EditorWindow;
+                if (win == null) continue;
+
+                var pos = win.position;
+                if (pos.x == 0 && pos.y == 0 && pos.width >= screenW)
+                {
+                    Debug.Log("[Fullscreen Play] Closing orphaned fullscreen window from previous session.");
+                    try { win.Close(); }
+                    catch { /* silent */ }
+                }
+            }
         }
 
         private static Rect GetTargetScreenRect()

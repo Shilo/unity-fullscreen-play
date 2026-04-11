@@ -18,7 +18,8 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)
 - **Check for Update** — one-click update check via Tools > Fullscreen Play > Check for Update
 - **Non-destructive** — your editor layout is never modified; fullscreen is a separate popup window
-- **Quit-shortcut safety** — Alt+F4, Cmd+Q, and Ctrl+Q exit fullscreen instead of quitting Unity
+- **Quit-shortcut safety** — Alt+F4 (Windows), Cmd+Q/Cmd+W (macOS), and Ctrl+Q (Linux) exit fullscreen instead of quitting Unity
+- **Crash recovery** — if Unity crashes or is killed while fullscreen is active, the orphaned popup window is automatically cleaned up on the next editor startup
 - **Clean enable/disable** — no leaks or stale state when toggling the package
 - **Localization** — English and German, extensible via JSON files in `Editor/Locales/`
 - **Windows** supported (macOS/Linux: fullscreen windowed only)
@@ -90,7 +91,9 @@ Unity's Game tab is internally an `EditorWindow` called `GameView`. This package
 
 When you exit fullscreen (Esc, F11, or stopping Play), the popup is simply closed. Your editor layout is never modified — there's nothing to restore.
 
-**Quit-shortcut safety** — Because the fullscreen window looks like a standalone app, users instinctively press Alt+F4 (Windows), Cmd+Q or Cmd+W (macOS), or Ctrl+Q (Linux) to close it. These shortcuts are intercepted while fullscreen is active and exit fullscreen instead of quitting Unity.
+**Crash recovery** — If Unity crashes or is force-killed while fullscreen is active, the popup window can survive in the saved editor layout. On the next startup, the package detects orphaned fullscreen windows and closes them automatically, restoring your normal layout.
+
+**Quit-shortcut safety** — Because the fullscreen window looks like a standalone app, users instinctively press Alt+F4 (Windows), Cmd+Q or Cmd+W (macOS), or Ctrl+Q (Linux) to close it. On Windows, Alt+F4 naturally closes only the fullscreen popup (it's a separate window). On macOS and Linux, application-level quit shortcuts (Cmd+Q, Ctrl+Q) are intercepted via `EditorApplication.wantsToQuit` — fullscreen exits and the quit is cancelled so the editor stays open.
 
 **On Windows**, the popup window alone wouldn't cover the taskbar, so native Win32 APIs (`SetWindowPos`, `SetWindowLong`) strip the window chrome and position it across the full screen. Alt-tab works normally — the fullscreen window doesn't pin itself above other applications.
 

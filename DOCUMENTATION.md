@@ -234,12 +234,25 @@ EditorApplication.playModeStateChanged
 **Why both mechanisms for F11:**
 F11 is registered via both `[Shortcut]` (for discoverability in Edit > Shortcuts) and `globalEventHandler` (for reliability). The `[Shortcut]` API doesn't fire when the fullscreen GameView captures keyboard input during play mode, so the global handler ensures F11 always works. Escape is only in the global handler since registering it as a `[Shortcut]` would conflict with games that use Escape for pause menus.
 
+**Quit-shortcut safety:**
+The fullscreen popup is a separate native window, so platform quit shortcuts are handled differently depending on how the OS delivers them:
+- **Alt+F4 (Windows)** sends `WM_CLOSE` to the focused window. Since the popup is its own HWND, Windows closes only the popup — the editor stays open. No code needed.
+- **Cmd+W (macOS)** closes the focused window (same pattern as Alt+F4).
+- **Cmd+Q (macOS)** and **Ctrl+Q (Linux)** are application-level quit commands — they tell Unity to shut down, bypassing the popup entirely. These are intercepted via `EditorApplication.wantsToQuit`: if fullscreen is active, the handler exits fullscreen and returns `false` to cancel the quit.
+
 **Assembly reload cleanup:**
 `AssemblyReloadEvents.beforeAssemblyReload` fires before domain reload (script recompilation, package disable/re-enable). The handler:
 1. Unhooks the `globalEventHandler` reflection delegate so it doesn't reference an unloaded assembly
 2. Closes any open fullscreen window
 
 This ensures zero stale delegates and zero errors when the package is disabled, re-enabled, or scripts recompile.
+
+**Crash recovery:**
+If Unity crashes or is force-killed while fullscreen is active, the popup window can survive in the saved editor layout because static state (`s_FullscreenWindow`) is lost on restart but the serialized window persists. Recovery works in two layers:
+1. **EditorPrefs flag** — `FullscreenPlay.Active` is set on enter and cleared on exit. If the flag is still set on startup, a crash occurred while fullscreen was active.
+2. **Position-based scan** — On every startup outside play mode, `Cleanup()` calls `CloseOrphanedFullscreenWindows()` which finds all GameView instances and closes any that sit at `(0, 0)` covering the full screen width. This catches orphans even when the EditorPrefs flag was not flushed to disk before a hard crash.
+
+The scan only runs when multiple GameView instances exist (the user's docked Game tab plus the orphan), so it never accidentally closes the user's only Game tab.
 
 #### 3. FullscreenPlaySettings.cs - Configuration
 
@@ -352,14 +365,15 @@ When Unity recompiles scripts or a package is disabled, a domain reload occurs �
 2. Close the fullscreen popup window if open
 
 **After reload** (`[InitializeOnLoad]` static constructor):
-1. Re-subscribe managed events (`playModeStateChanged`)
+1. Re-subscribe managed events (`playModeStateChanged`, `wantsToQuit`)
 2. Re-hook the `globalEventHandler`
-3. If not in play mode, call `FullscreenGameView.Cleanup()` to clear orphaned state
+3. If not in play mode, call `FullscreenGameView.Cleanup()` to clear orphaned state — this includes scanning for popup windows that survived a hard crash (see "Crash recovery" above)
 
 This two-phase approach ensures:
 - **Package disable:** `beforeAssemblyReload` runs, cleans up all external state, then the assembly unloads cleanly. No stale delegates or visual elements remain.
 - **Package re-enable:** `[InitializeOnLoad]` runs fresh in the new domain. All state starts clean.
 - **Script recompilation:** Both phases run in sequence — cleanup then re-init. No accumulation of duplicate handlers.
+- **Hard crash or force-kill:** The before-reload phase never runs, but the after-reload phase on the next startup detects and closes orphaned fullscreen windows.
 
 ---
 
