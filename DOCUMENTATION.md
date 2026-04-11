@@ -204,6 +204,11 @@ ExitFullscreen()
 - `GameViewType.GetProperty("selectedSizeIndex", ...)` - copies resolution/aspect settings
 - `PlayModeViewType.GetMethod("IsShowingGizmos")` / `SetShowGizmos()` - copies Gizmos visibility
 - `GameViewType.GetField("m_Gizmos", ...)` - sets the Gizmos backing field to match toolbar state
+- `GameViewType.GetField("m_VSyncEnabled", ...)` - copies VSync toggle state
+- `GameViewType.GetField("m_Stats", ...)` - copies Stats overlay state
+- `GameViewType.GetField("m_LowResolutionForAspectRatios", ...)` - copies low-res rendering flag (array, cloned)
+- `GameViewType.GetField("m_XRRenderMode", ...)` - copies XR mirror blit mode
+- `GameViewType.GetField("m_NoCameraWarning", ...)` - copies "No cameras rendering" warning state
 
 #### 2. FullscreenPlayController.cs - The Brain
 
@@ -328,8 +333,13 @@ When creating a new GameView instance, it starts with default settings (Display 
 - **targetDisplay** - which camera display to render (Display 1, 2, etc.)
 - **selectedSizeIndex** - which resolution/aspect ratio preset is selected
 - **Gizmos visibility** - whether Gizmos (colliders, icons, etc.) are drawn over the game
+- **VSync** - whether vertical sync is enabled in the Game view
+- **Stats overlay** - whether the rendering statistics overlay (FPS, batches, triangles) is shown
+- **Low Resolution Aspect Ratios** - whether the Game view renders at 1x resolution on HiDPI/Retina displays (bool array, cloned to avoid shared reference)
+- **XR render mode** - which eye/mirror blit mode is used for XR/VR projects
+- **No Camera Warning** - whether the "No cameras rendering" warning is displayed
 
-Gizmos copying involves two levels: `m_Gizmos` on `GameView` (the toolbar toggle's backing field) and `SetShowGizmos()` on the `PlayModeView` base class (what the renderer reads). Both are set so the fullscreen view's Gizmos state matches the source Game tab exactly.
+Gizmos copying involves two levels: `m_Gizmos` on `GameView` (the toolbar toggle's backing field) and `SetShowGizmos()` on the `PlayModeView` base class (what the renderer reads). Both are set so the fullscreen view's Gizmos state matches the source Game tab exactly. All other fields are copied directly via a shared `CopyField()` helper that uses `GameViewType.GetField()` with null-check fallback. The `m_LowResolutionForAspectRatios` array is cloned to prevent the two GameView instances from sharing a reference.
 
 This ensures the fullscreen view renders identically to what the user was seeing in their Game tab.
 

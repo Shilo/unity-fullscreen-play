@@ -223,12 +223,42 @@ namespace Shilo.FullscreenPlay.Editor
                         setShowGizmos?.Invoke(fullscreenView, new object[] { gizmos });
                     }
                 }
+
+                // Copy VSync toggle state
+                CopyField(sourceView, fullscreenView, "m_VSyncEnabled");
+
+                // Copy Stats overlay state
+                CopyField(sourceView, fullscreenView, "m_Stats");
+
+                // Copy Low Resolution Aspect Ratios (array — clone to avoid shared reference)
+                var lowResField = GameViewType.GetField("m_LowResolutionForAspectRatios",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (lowResField != null)
+                {
+                    var arr = lowResField.GetValue(sourceView) as bool[];
+                    if (arr != null)
+                        lowResField.SetValue(fullscreenView, (bool[])arr.Clone());
+                }
+
+                // Copy XR render mode (only relevant for XR/VR projects)
+                CopyField(sourceView, fullscreenView, "m_XRRenderMode");
+
+                // Copy "No Camera Warning" visibility
+                CopyField(sourceView, fullscreenView, "m_NoCameraWarning");
             }
             catch (Exception e)
             {
                 // Non-critical: the fullscreen view will work with defaults
                 Debug.LogWarning($"[Fullscreen Play] Could not copy GameView settings: {e.Message}");
             }
+        }
+
+        private static void CopyField(EditorWindow source, EditorWindow target, string fieldName)
+        {
+            var field = GameViewType.GetField(fieldName,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field != null)
+                field.SetValue(target, field.GetValue(source));
         }
 
         // --- Windows-specific fullscreen helpers ---

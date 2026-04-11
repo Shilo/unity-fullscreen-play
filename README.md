@@ -12,7 +12,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 - **F11 hotkey** — toggle fullscreen on/off during Play mode
 - **Ctrl+Shift+F11** — toggle auto-fullscreen on play setting
 - **Esc to exit** — press Escape to leave fullscreen without stopping Play
-- **Gizmos support** — fullscreen mirrors your Game view's Gizmos toggle (colliders, icons, etc.)
+- **Game view parity** — fullscreen mirrors Gizmos, Stats, VSync, Low Resolution Aspect Ratios, and XR render mode from your Game view
 - **Toast notification** — brief overlay showing exit instructions (configurable)
 - **Fullscreen Windowed** mode — Exclusive Fullscreen deferred (requires display resolution change via Win32, risky in-editor if Unity crashes mid-session)
 - **Settings panel** in Edit > Preferences > Fullscreen Play (fully localized)
@@ -81,6 +81,21 @@ Open **Edit > Preferences > Fullscreen Play** to configure:
 | Toast Duration | 3s | How long the toast is visible |
 
 The F11 hotkey can be rebound in **Edit > Shortcuts** under "Fullscreen Play".
+
+## Comparison
+
+| Feature | Fullscreen Play | Fullscreen Editor (paid) | Fullscreen Play Mode Free | fnuecke's Gist |
+|---------|:-:|:-:|:-:|:-:|
+| Free / open source | Yes | No (~$15) | Yes | Yes |
+| Auto-fullscreen on Play | Yes | Yes | Yes | No |
+| Game view parity (Gizmos, Stats, VSync) | Yes | ? | No | No |
+| Configurable settings | Yes | Yes | Limited | No |
+| Toast notification | Yes | No | No | No |
+| Rebindable hotkey | Yes | Yes | No | No |
+| Localization | Yes | No | No | No |
+| One-click update check | Yes | Asset Store | Asset Store | No |
+| Non-destructive (layout safe) | Yes | No | Yes | Yes |
+| Quit-shortcut safety | Yes | ? | No | No |
 
 ## How It Works
 
