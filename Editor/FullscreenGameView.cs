@@ -209,7 +209,8 @@ namespace Shilo.FullscreenPlay.Editor
                 var playModeViewType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.PlayModeView");
                 if (playModeViewType != null)
                 {
-                    var isShowingGizmos = playModeViewType.GetMethod("IsShowingGizmos");
+                    var isShowingGizmos = playModeViewType.GetMethod("IsShowingGizmos",
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     if (isShowingGizmos != null)
                     {
                         bool gizmos = (bool)isShowingGizmos.Invoke(sourceView, null);
@@ -217,7 +218,8 @@ namespace Shilo.FullscreenPlay.Editor
                             BindingFlags.NonPublic | BindingFlags.Instance);
                         gizmosField?.SetValue(fullscreenView, gizmos);
 
-                        var setShowGizmos = playModeViewType.GetMethod("SetShowGizmos");
+                        var setShowGizmos = playModeViewType.GetMethod("SetShowGizmos",
+                            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                         setShowGizmos?.Invoke(fullscreenView, new object[] { gizmos });
                     }
                 }
