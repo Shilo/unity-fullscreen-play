@@ -248,11 +248,12 @@ The fullscreen popup is a separate native window, so platform quit shortcuts are
 This ensures zero stale delegates and zero errors when the package is disabled, re-enabled, or scripts recompile.
 
 **Crash recovery:**
-If Unity crashes or is force-killed while fullscreen is active, the popup window can survive in the saved editor layout because static state (`s_FullscreenWindow`) is lost on restart but the serialized window persists. Recovery works in two layers:
-1. **EditorPrefs flag** — `FullscreenPlay.Active` is set on enter and cleared on exit. If the flag is still set on startup, a crash occurred while fullscreen was active.
-2. **Position-based scan** — On every startup outside play mode, `Cleanup()` calls `CloseOrphanedFullscreenWindows()` which finds all GameView instances and closes any that sit at `(0, 0)` covering the full screen width. This catches orphans even when the EditorPrefs flag was not flushed to disk before a hard crash.
+If Unity crashes or is force-killed while fullscreen is active, the popup window can survive in the saved editor layout because static state (`s_FullscreenWindow`) is lost on restart but the serialized window persists. Recovery uses three approaches — the first to succeed cancels the others:
+1. **Immediate** — `Cleanup()` runs in the `[InitializeOnLoad]` constructor. This handles managed state (delegates, toast, prefs) and works for mid-session domain reloads, but `EditorWindow.Close()` is silently ignored during cold startup because the window system isn't fully initialized yet.
+2. **Update loop** — `EditorApplication.update` retries `CloseOrphanedFullscreenWindows()` each frame for up to 10 frames. This catches the orphan as soon as the editor starts processing frames.
+3. **delayCall** — `EditorApplication.delayCall` runs the scan as a guaranteed fallback once the editor is fully active.
 
-The scan only runs when multiple GameView instances exist (the user's docked Game tab plus the orphan), so it never accidentally closes the user's only Game tab.
+`CloseOrphanedFullscreenWindows()` finds all GameView instances and closes any that sit at `(0, 0)` covering the full screen width. The scan only runs when multiple GameView instances exist (the user's docked Game tab plus the orphan), so it never accidentally closes the user's only Game tab.
 
 #### 3. FullscreenPlaySettings.cs - Configuration
 
@@ -367,7 +368,7 @@ When Unity recompiles scripts or a package is disabled, a domain reload occurs �
 **After reload** (`[InitializeOnLoad]` static constructor):
 1. Re-subscribe managed events (`playModeStateChanged`, `wantsToQuit`)
 2. Re-hook the `globalEventHandler`
-3. If not in play mode, call `FullscreenGameView.Cleanup()` to clear orphaned state — this includes scanning for popup windows that survived a hard crash (see "Crash recovery" above)
+3. If not in play mode, call `FullscreenGameView.Cleanup()` to clear managed state, then schedule orphan window cleanup via `update` loop and `delayCall` (see "Crash recovery" above)
 
 This two-phase approach ensures:
 - **Package disable:** `beforeAssemblyReload` runs, cleans up all external state, then the assembly unloads cleanly. No stale delegates or visual elements remain.
