@@ -157,12 +157,55 @@ namespace Shilo.FullscreenPlay.Editor
             }
 
             if (i >= json.Length) return null;
-            string result = json.Substring(start, i - start)
-                .Replace("\\\"", "\"")
-                .Replace("\\\\", "\\")
-                .Replace("\\n", "\n");
+            string raw = json.Substring(start, i - start);
             i++; // skip closing quote
-            return result;
+            return UnescapeJsonString(raw);
+        }
+
+        private static string UnescapeJsonString(string s)
+        {
+            var sb = new System.Text.StringBuilder(s.Length);
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (s[i] == '\\' && i + 1 < s.Length)
+                {
+                    char next = s[i + 1];
+                    switch (next)
+                    {
+                        case '"':  sb.Append('"');  i++; break;
+                        case '\\': sb.Append('\\'); i++; break;
+                        case '/':  sb.Append('/');  i++; break;
+                        case 'n':  sb.Append('\n'); i++; break;
+                        case 'r':  sb.Append('\r'); i++; break;
+                        case 't':  sb.Append('\t'); i++; break;
+                        case 'b':  sb.Append('\b'); i++; break;
+                        case 'f':  sb.Append('\f'); i++; break;
+                        case 'u':
+                            if (i + 5 < s.Length)
+                            {
+                                string hex = s.Substring(i + 2, 4);
+                                if (int.TryParse(hex,
+                                    System.Globalization.NumberStyles.HexNumber,
+                                    null, out int codePoint))
+                                {
+                                    sb.Append((char)codePoint);
+                                    i += 5;
+                                    break;
+                                }
+                            }
+                            sb.Append(s[i]);
+                            break;
+                        default:
+                            sb.Append(s[i]);
+                            break;
+                    }
+                }
+                else
+                {
+                    sb.Append(s[i]);
+                }
+            }
+            return sb.ToString();
         }
 
         private static void SkipWhitespace(string json, ref int i)
