@@ -23,6 +23,7 @@ The project is well-structured and solid. Architecture decisions (new window vs.
 - **CHANGELOG.md version sections** — split [Unreleased] into proper 0.2.0, 0.3.0, 0.4.0 sections based on git tag history (`b62a0e1`)
 - **CHANGELOG.md 0.1.0 GameView dropdown reference** — corrected; that feature was added in 0.2.0 and removed in 0.3.0 (`b62a0e1`)
 - **README version pin example** — updated from `#v0.1.0` to `#v0.4.0` (`b62a0e1`)
+- **PackageUpdater installs HEAD instead of latest tagged release** — replaced direct `Client.Add(GitUrl)` with GitHub Releases API lookup to discover the latest tag, then installs with `Client.Add(GitUrl + "#tag")`. Users are now prompted before installing and never receive unreleased commits (`7e57a70`)
 
 ---
 
@@ -34,11 +35,6 @@ The project is well-structured and solid. Architecture decisions (new window vs.
 `CloseOrphanedFullscreenWindows()` identifies orphans by `pos.x == 0 && pos.y == 0 && pos.width >= screenW`. This could false-positive with a maximized editor window at position (0,0) on the primary monitor. It could also false-negative on multi-monitor setups.
 
 Fix: use the `titleContent.text` value "FullscreenPlayPopup" (already set on line 69 for Win32 handle lookup) as the orphan signature. Set it unconditionally on all platforms and match on it during recovery.
-
-**2. PackageUpdater installs HEAD instead of the latest tagged release**
-`Editor/PackageUpdater.cs` line 15
-
-The Git URL has no `#tag` suffix, so `Client.Add()` resolves to HEAD. Users can silently install unreleased commits. The version comparison fix mitigates the UX (shows "Already up to date" when versions match), but the underlying issue remains. Fix requires resolving the latest release tag at runtime (GitHub API or maintaining a `latest` tag).
 
 ---
 

@@ -288,13 +288,15 @@ A `VisualElement` overlay attached to the fullscreen GameView's `rootVisualEleme
 
 #### 5. PackageUpdater.cs - Update Check
 
-Provides a one-click update mechanism accessible via `Tools > Fullscreen Play > Check for Update...`. Uses Unity's Package Manager Client API (`UnityEditor.PackageManager.Client`) to:
+Provides a one-click update mechanism accessible via `Tools > Fullscreen Play > Check for Update...`. Uses the GitHub Releases API and Unity's Package Manager Client API:
 
-1. List installed packages to find the current version
-2. Re-add the package from the Git URL to fetch the latest version
-3. Display progress via `EditorUtility.DisplayProgressBar` and results via dialog
+1. List installed packages to find the current version (`Client.List`)
+2. Query `https://api.github.com/repos/.../releases/latest` via `UnityWebRequest` to discover the latest tagged release
+3. Compare the installed version against the release tag — if already current, inform the user without modifying the installation
+4. If a newer version exists, prompt the user for confirmation before installing
+5. Install the specific tagged version via `Client.Add(GitUrl + "#tag")`, ensuring only published releases are installed
 
-All user-facing strings (progress messages, error messages, success confirmation) are localized via `I18n.Tr()`.
+The `tag_name` field is extracted from the GitHub API JSON response via simple string search (no external JSON library). A `User-Agent` header is set on the request as required by the GitHub API. In-flight web requests are cleaned up via `AssemblyReloadEvents.beforeAssemblyReload` to prevent native handle leaks during domain reloads. All user-facing strings are localized via `I18n.Tr()`.
 
 #### 6. I18n.cs - Internationalization
 
