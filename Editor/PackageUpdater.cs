@@ -24,6 +24,9 @@ namespace Shilo.FullscreenPlay.Editor
         /// </summary>
         public static void CheckForUpdate()
         {
+            if (s_ListRequest != null && !s_ListRequest.IsCompleted) return;
+            if (s_AddRequest  != null && !s_AddRequest.IsCompleted)  return;
+
             EditorUtility.DisplayProgressBar(DialogTitle, I18n.Tr("update_checking"), 0.2f);
             s_ListRequest = Client.List(offlineMode: false);
             EditorApplication.update += OnListRequestComplete;
