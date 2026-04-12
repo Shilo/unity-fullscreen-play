@@ -22,6 +22,7 @@
   "update_fetching": "Fetching latest version...",
   "update_installing": "Installing update...",
   "update_check_failed": "Failed to check for updates:\n{0}",
+  "update_parse_failed": "Could not parse release info.",
   "update_not_found": "Could not find the installed package. It may have been embedded or installed manually.",
   "update_failed": "Update failed:\n{0}",
   "update_already_current": "Already up to date (version {0}).",

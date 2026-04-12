@@ -25,6 +25,19 @@ namespace Shilo.FullscreenPlay.Editor
         private static UnityWebRequest s_WebRequest;
         private static string s_InstalledVersion;
 
+        static PackageUpdater()
+        {
+            AssemblyReloadEvents.beforeAssemblyReload += () =>
+            {
+                if (s_WebRequest != null && !s_WebRequest.isDone)
+                {
+                    s_WebRequest.Abort();
+                }
+                s_WebRequest?.Dispose();
+                s_WebRequest = null;
+            };
+        }
+
         /// <summary>
         /// Checks for a newer version of the package and prompts the user to update.
         /// </summary>
@@ -108,7 +121,7 @@ namespace Shilo.FullscreenPlay.Editor
             {
                 EditorUtility.DisplayDialog(
                     DialogTitle,
-                    string.Format(I18n.Tr("update_check_failed"), "Could not parse release info."),
+                    string.Format(I18n.Tr("update_check_failed"), I18n.Tr("update_parse_failed")),
                     "OK");
                 return;
             }
