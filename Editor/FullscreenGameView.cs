@@ -45,6 +45,12 @@ namespace Shilo.FullscreenPlay.Editor
             // Calculate the target screen rect before creating the window
             s_FullscreenRect = GetTargetScreenRect();
 
+            // Identify the source GameView BEFORE creating the clone so
+            // FindObjectsOfTypeAll doesn't include the new instance.
+            // Prefer the focused GameView (if one is focused) over an
+            // arbitrary first-found instance.
+            EditorWindow sourceGameView = FindSourceGameView();
+
             // Create a new GameView instance (separate from the user's existing one)
             s_FullscreenWindow = (EditorWindow)ScriptableObject.CreateInstance(GameViewType);
             if (s_FullscreenWindow == null)
@@ -71,7 +77,7 @@ namespace Shilo.FullscreenPlay.Editor
 #endif
 
             // Copy target display and resolution settings from the existing GameView
-            CopyGameViewSettings(s_FullscreenWindow);
+            CopyGameViewSettings(s_FullscreenWindow, sourceGameView);
 
             // Show toast notification (overlay on the fullscreen window)
             if (FullscreenPlaySettings.ShowToast)
@@ -234,22 +240,32 @@ namespace Shilo.FullscreenPlay.Editor
             }
         }
 
-        private static void CopyGameViewSettings(EditorWindow fullscreenView)
+        /// <summary>
+        /// Finds the best source GameView to copy settings from.
+        /// Prefers the currently focused GameView; falls back to the
+        /// first available instance.
+        /// </summary>
+        private static EditorWindow FindSourceGameView()
+        {
+            if (GameViewType == null) return null;
+
+            var focused = EditorWindow.focusedWindow;
+            if (focused != null && focused.GetType() == GameViewType)
+                return focused;
+
+            var allGameViews = Resources.FindObjectsOfTypeAll(GameViewType);
+            foreach (var obj in allGameViews)
+            {
+                var win = obj as EditorWindow;
+                if (win != null) return win;
+            }
+            return null;
+        }
+
+        private static void CopyGameViewSettings(EditorWindow fullscreenView, EditorWindow sourceView)
         {
             try
             {
-                // Find the existing GameView to copy settings from
-                var existingViews = Resources.FindObjectsOfTypeAll(GameViewType);
-                EditorWindow sourceView = null;
-                foreach (var view in existingViews)
-                {
-                    if (view != fullscreenView)
-                    {
-                        sourceView = view as EditorWindow;
-                        break;
-                    }
-                }
-
                 if (sourceView == null) return;
 
                 // Copy targetDisplay via reflection
