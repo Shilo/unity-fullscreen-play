@@ -23,5 +23,6 @@
   "update_check_failed": "Update-Pr\u00fcfung fehlgeschlagen:\n{0}",
   "update_not_found": "Installiertes Paket nicht gefunden. Es wurde m\u00f6glicherweise eingebettet oder manuell installiert.",
   "update_failed": "Update fehlgeschlagen:\n{0}",
+  "update_already_current": "Bereits auf dem neuesten Stand (Version {0}).",
   "update_success": "Paket auf Version {0} aktualisiert."
 }

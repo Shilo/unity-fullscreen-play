@@ -17,6 +17,7 @@ namespace Shilo.FullscreenPlay.Editor
 
         private static ListRequest s_ListRequest;
         private static AddRequest s_AddRequest;
+        private static string s_InstalledVersion;
 
         /// <summary>
         /// Checks for a newer version of the package and prompts the user to update.
@@ -63,6 +64,7 @@ namespace Shilo.FullscreenPlay.Editor
                 return;
             }
 
+            s_InstalledVersion = installedVersion;
             EditorUtility.DisplayProgressBar(DialogTitle, I18n.Tr("update_fetching"), 0.5f);
             s_AddRequest = Client.Add(GitUrl);
             EditorApplication.update += OnAddRequestComplete;
@@ -84,10 +86,20 @@ namespace Shilo.FullscreenPlay.Editor
             }
 
             var newVersion = s_AddRequest.Result.version;
-            EditorUtility.DisplayDialog(
-                DialogTitle,
-                string.Format(I18n.Tr("update_success"), newVersion),
-                "OK");
+            if (newVersion == s_InstalledVersion)
+            {
+                EditorUtility.DisplayDialog(
+                    DialogTitle,
+                    string.Format(I18n.Tr("update_already_current"), newVersion),
+                    "OK");
+            }
+            else
+            {
+                EditorUtility.DisplayDialog(
+                    DialogTitle,
+                    string.Format(I18n.Tr("update_success"), newVersion),
+                    "OK");
+            }
         }
     }
 }
