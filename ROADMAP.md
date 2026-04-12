@@ -17,7 +17,9 @@ Currently always fullscreens on the primary monitor at (0,0) via `Screen.current
 ### GameView-local entry point
 **Who has it:** Fullscreen Editor, initial v0.1.0
 
-A GameView-local entry point (dropdown or overlay button) is the most natural place users look for play mode options. The v0.1.0 release had a GameView play-mode dropdown entry; it was removed in v0.3.0. Restoring this would improve discoverability without changing the core architecture. Unity 6's Overlay Toolbar API could be used here.
+A GameView-local entry point (dropdown or overlay button) is the most natural place users look for play mode options. The v0.1.0 release had a GameView play-mode dropdown entry; it was removed in v0.3.0.
+
+**Status: blocked.** Two implementation attempts were made and both failed. Unity's GameView toolbar is an internal UI element that does not expose any API for injecting custom items or children. The only viable approach is creating an overlay positioned on top of the toolbar, but this is fragile — the overlay doesn't participate in the toolbar's layout, leading to misalignment, z-order issues, and a visually broken experience. Until Unity provides a proper extension point for the GameView toolbar (or the internal toolbar API stabilizes enough to reflect into safely), this feature is not implementable at an acceptable quality level.
 
 ## Medium Priority
 
