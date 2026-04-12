@@ -92,6 +92,7 @@ namespace Shilo.FullscreenPlay.Editor
 
             s_WebRequest = UnityWebRequest.Get(ReleaseApiUrl);
             s_WebRequest.SetRequestHeader("User-Agent", "UnityEditor");
+            s_WebRequest.timeout = 10;
             s_WebRequest.SendWebRequest();
             EditorApplication.update += OnReleaseFetched;
         }
