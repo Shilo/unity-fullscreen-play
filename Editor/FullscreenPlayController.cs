@@ -247,7 +247,10 @@ namespace Shilo.FullscreenPlay.Editor
             // F11: toggle fullscreen during play mode.
             // The [Shortcut] attribute doesn't fire when the fullscreen
             // GameView captures keyboard input, so we handle it here too.
+            // Require no modifiers so Ctrl+Shift+F11 (auto-fullscreen
+            // menu shortcut) doesn't also trigger this toggle.
             if (e.keyCode == KeyCode.F11
+                && !e.shift && !e.control && !e.alt && !e.command
                 && FullscreenPlaySettings.EnableHotkey
                 && EditorApplication.isPlaying)
             {
