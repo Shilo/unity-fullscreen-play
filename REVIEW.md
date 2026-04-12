@@ -42,41 +42,6 @@ The Git URL has no `#tag` suffix, so `Client.Add()` resolves to HEAD. Users can 
 
 ---
 
-## Feature Gaps vs. Competitors
-
-### High Priority
-
-| Gap | Who Has It | Details |
-|-----|-----------|---------|
-| **Multi-monitor support** | Fullscreen Editor, Fullscreen Anything | Highest-impact gap. Always targets primary monitor at (0,0). Could use `Display.displays` or `EditorWindow.position` to determine the correct screen. |
-| **Fullscreen outside Play mode** | fnuecke's gist, Fullscreen Editor | `EnterFullscreen()` guards with `isPlaying` check. Users may want fullscreen for layout inspection or screenshots. |
-| **GameView-local entry point** | Fullscreen Editor, initial v0.1.0 | A GameView-local entry point (dropdown or overlay button) is the most natural place users look for play mode options. Unity 6's Overlay Toolbar API could be used. |
-
-### Medium Priority
-
-| Gap | Details |
-|-----|---------|
-| **Fullscreen any editor window** | Fullscreen Editor ($15) and Fullscreen Anything support this. Different product scope, but Scene view support alone would help. |
-| **Toast doesn't reflect rebound shortcuts** | Keycap labels hardcode "F11" and "Esc". Should query the Shortcut Manager for the actual binding. |
-| **No re-enter fullscreen after domain reload** | Could auto-restore via an EditorPrefs flag, opt-in via a setting. |
-| **Per-project settings option** | All settings are EditorPrefs (per-machine). Teams cannot enforce consistent behavior. |
-| **No macOS/Linux native integration** | No Cocoa/NSWindow or X11/Wayland equivalents for taskbar coverage. |
-
-### Lower Priority
-
-| Gap | Details |
-|-----|---------|
-| **Click to dismiss toast** | Toast is non-interactive. Users might expect to click to dismiss. |
-| **Compatibility discipline across Unity versions** | A test matrix would help if broad version support is a goal. |
-
-### Not recommended near-term
-
-| Item | Reasoning |
-|------|-----------|
-| **Exclusive fullscreen** | High risk in editor context. Correctly deferred. |
-
----
-
 ## What's Done Well
 
 - **Non-destructive architecture** — separate GameView popup, editor layout never at risk
