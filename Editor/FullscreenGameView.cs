@@ -180,9 +180,27 @@ namespace Shilo.FullscreenPlay.Editor
                 var allGameViews = Resources.FindObjectsOfTypeAll(GameViewType);
                 if (allGameViews.Length <= 1) return false;
 
-                // The orphaned popup sits at (0,0) covering the full screen.
-                // Close any GameView whose position starts at the origin and
-                // spans the full screen width — that's our leftover popup.
+                // Identify orphans by position: (0,0) covering the full screen width.
+                //
+                // Why not use titleContent ("FullscreenPlayPopup") instead?
+                // Unity's GameView resets its title to "Game" during OnEnable,
+                // so the custom title we set doesn't survive serialization
+                // across restarts — exactly when we need it.
+                //
+                // False positive risk is negligible because ALL conditions
+                // must be true: 2+ GameViews exist, one at exactly (0,0),
+                // covering full screen width, and not in play mode. Normal
+                // docked GameViews are offset by toolbars/tabs (e.g. 485,79).
+                // Only a ShowPopup() window sits at (0,0) fullscreen.
+                //
+                // Multi-monitor: currently only targets the primary monitor
+                // at (0,0). When multi-monitor support is added, check
+                // against all display origins (e.g. 1920,0 for a secondary
+                // monitor to the right) instead of just (0,0). This is
+                // still false-positive-safe because only borderless
+                // ShowPopup() windows sit at exact display origins —
+                // docked tabs are offset by layout chrome and floating
+                // windows are offset by their title bar.
                 var res = Screen.currentResolution;
                 float scale = EditorGUIUtility.pixelsPerPoint;
                 float screenW = res.width / scale;
