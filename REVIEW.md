@@ -13,7 +13,7 @@ The project is well-structured and solid. Architecture decisions (new window vs.
 
 ## Table of Contents
 
-1. [Bugs & Code Issues](#bugs--code-issues)
+1. [Remaining Bugs & Code Issues](#remaining-bugs--code-issues)
 2. [Documentation Inaccuracies](#documentation-inaccuracies)
 3. [Feature Gaps vs. Competitors](#feature-gaps-vs-competitors)
 4. [What's Done Well](#whats-done-well)
@@ -21,49 +21,32 @@ The project is well-structured and solid. Architecture decisions (new window vs.
 
 ---
 
-## Bugs & Code Issues
+## Fixed (2026-04-11)
+
+The following issues from the original review have been resolved:
+
+- **JSON parser `\uXXXX` decoding** — replaced chained `.Replace()` with proper character-by-character unescape handling all standard JSON escapes (`2dda83a`)
+- **F11 modifier key conflict** — added `!e.shift && !e.control && !e.alt && !e.command` guard so Ctrl+Shift+F11 no longer also toggles fullscreen (`23c1359`)
+- **CopyGameViewSettings arbitrary source** — now captures source GameView before creating clone, preferring `EditorWindow.focusedWindow` if it is a GameView (`f78c696`)
+- **PackageUpdater version comparison** — compares installed vs. resolved version, shows "Already up to date" when they match (`ad120af`)
+- **PackageUpdater concurrent call guard** — returns early if a list or add request is already in progress (`d776d21`)
+
+---
+
+## Remaining Bugs & Code Issues
 
 ### Important
 
 **1. PackageUpdater installs unreleased HEAD instead of the latest tagged release**
-`Editor/PackageUpdater.cs` lines 15, 46-68
+`Editor/PackageUpdater.cs` line 15
 
-Two distinct problems:
+The Git URL (`https://github.com/Shilo/unity-fullscreen-play.git`) has no `#tag` suffix. `Client.Add()` resolves to HEAD of the default branch, which may contain unreleased commits. Users can silently install unreleased code while `package.json` still reports the old version string. This breaks the release model described in DOCUMENTATION.md.
 
-- The Git URL (`https://github.com/Shilo/unity-fullscreen-play.git`) has no `#tag` suffix. `Client.Add()` resolves to HEAD of the default branch, which may contain unreleased commits. Users can silently install unreleased code while `package.json` still reports the old version string. This breaks the release model described in DOCUMENTATION.md.
-- The `installedVersion` variable is captured but never compared against the resolved version. The user receives no "Already up to date" feedback. The success dialog says "Package updated to version {0}" even when the version did not change.
+The version comparison fix (above) mitigates the UX problem — users now see "Already up to date" when versions match — but the underlying issue remains: the updater fetches HEAD, not the latest tagged release.
 
-Fix: resolve the latest release tag (e.g., via the GitHub API or by maintaining a `latest` tag) and install `https://github.com/Shilo/unity-fullscreen-play.git#vX.Y.Z`. Compare the resolved version against `installedVersion` and display "Already up to date" when they match.
+Fix: resolve the latest release tag (e.g., via the GitHub API or by maintaining a `latest` tag) and install `https://github.com/Shilo/unity-fullscreen-play.git#vX.Y.Z`.
 
-**2. JSON parser doesn't handle `\uXXXX` unicode escapes — active user-facing bug**
-`Editor/I18n.cs` lines 146-166
-
-The custom JSON parser handles `\"`, `\\`, and `\n` but not `\uXXXX` unicode escapes. This is not a theoretical concern — the shipped locale files actively use these escapes:
-
-- `en.json` line 12: `\u2192` (→ arrow in hotkey help text)
-- `de.json` throughout: `\u00fc` (ü), `\u00e4` (ä), `\u00f6` (ö), `\u2192` (→), `\u00a0` (non-breaking space), `\u2026` (ellipsis)
-
-The parser encounters `\u`, skips `u` (treating it as a generic escaped character), then reads the hex digits as literal text. German users will see garbled strings like `u00fcber` instead of `über` in the Preferences panel. English users will see `u2192` instead of `→` in the hotkey help text.
-
-Fix: add `\uXXXX` decoding to `ReadJsonString`, or replace the custom parser with `JsonUtility` / Unity's `Newtonsoft.Json` package.
-
-**3. CopyGameViewSettings picks an arbitrary GameView when multiple exist**
-`Editor/FullscreenGameView.cs` lines 241-251
-
-`CopyGameViewSettings()` iterates `FindObjectsOfTypeAll(GameViewType)` and takes the first instance that is not the fullscreen clone. If the user has multiple GameView tabs open (e.g., targeting different displays, or different aspect ratios), the order from `FindObjectsOfTypeAll` is not guaranteed to be the main or most recently focused one. The fullscreen view may copy settings from the wrong source window.
-
-The README and DOCUMENTATION.md promise parity with "your Game view," but the code does not actually identify which Game view that is.
-
-Fix: resolve the last-focused or main GameView before entering fullscreen. If Unity exposes no stable API for this, track the source GameView reference when the user triggers fullscreen (e.g., from the focused window at the time of the menu click or shortcut press).
-
-**4. Global F11 handler doesn't check for modifier keys**
-`Editor/FullscreenPlayController.cs` lines 250-256
-
-`OnGlobalEvent` checks `e.keyCode == KeyCode.F11` but does not verify that no modifier keys are held. Pressing Ctrl+Shift+F11 (the auto-fullscreen menu shortcut) during play mode will also toggle fullscreen instead of (or in addition to) toggling the auto-play setting.
-
-Fix: add `!e.alt && !e.shift && !e.control && !e.command` before the F11 toggle.
-
-**5. Orphan detection uses fragile position heuristic**
+**2. Orphan detection uses fragile position heuristic**
 `Editor/FullscreenGameView.cs` lines 178-195
 
 `CloseOrphanedFullscreenWindows()` identifies orphans by `pos.x == 0 && pos.y == 0 && pos.width >= screenW`. This could false-positive with a maximized editor window at position (0,0) on the primary monitor. It could also false-negative on multi-monitor setups where the fullscreen popup was on a non-primary monitor (coordinates would not start at 0,0).
@@ -72,17 +55,12 @@ Fix: use the `titleContent.text` value "FullscreenPlayPopup" (already set on lin
 
 ### Minor
 
-**6. PackageUpdater not guarded against concurrent calls**
-`Editor/PackageUpdater.cs`
-
-If the user clicks "Check for Update" twice rapidly, `s_ListRequest` is overwritten and the first request's callback keeps polling the second request. Adding `if (s_ListRequest != null && !s_ListRequest.IsCompleted) return;` at the top of `CheckForUpdate()` would prevent this.
-
-**7. Several empty catch blocks swallow diagnostic information**
+**3. Several empty catch blocks swallow diagnostic information**
 `Editor/FullscreenGameView.cs` line 232, `Editor/FullscreenPlayController.cs` line 229, `Editor/I18n.cs` lines 68-69 and 97
 
 Multiple catch blocks are completely empty (`catch { }`). While the "non-critical, carry on" philosophy is correct for an editor extension, adding `Debug.LogWarning` with the `[Fullscreen Play]` prefix (matching the existing pattern elsewhere) would help diagnose user-reported issues.
 
-**8. No automated tests**
+**4. No automated tests**
 
 The package relies heavily on internal Unity reflection and OS/windowing behavior. There is no editor test coverage in the repository. Reflection regressions are easy to introduce and hard to catch, especially across Unity updates.
 
@@ -92,23 +70,23 @@ At minimum, add editor tests around non-runtime logic: settings persistence roun
 
 ## Documentation Inaccuracies
 
-**9. DOCUMENTATION.md describes toast as a "separate EditorWindow" but it is a VisualElement overlay**
+**5. DOCUMENTATION.md describes toast as a "separate EditorWindow" but it is a VisualElement overlay**
 
 The "Decision 5: Toast as Separate Window" section describes implementing the toast as a separate popup EditorWindow. The actual implementation uses `window.rootVisualElement.Add(_root)` (`Editor/FullscreenToast.cs` line 159), making it a VisualElement overlay on the fullscreen GameView, not a separate native window. The mention of `BringWindowToTop()` for the toast is also incorrect for the current implementation. The current approach is actually cleaner than the documented one.
 
-**10. CHANGELOG.md has everything under [Unreleased] despite being at v0.4.0**
+**6. CHANGELOG.md has everything under [Unreleased] despite being at v0.4.0**
 
 The changelog has a single `[Unreleased]` section with all changes since 0.1.0, but `package.json` is at version 0.4.0. Versions 0.2.0 through 0.4.0 have no individual changelog entries. All changes are lumped together.
 
-**11. README version pin example is outdated**
+**7. README version pin example is outdated**
 
 The README (line 46) shows `#v0.1.0` as the version pin example, but the package is at 0.4.0. Should reference the current or latest version.
 
-**12. CHANGELOG 0.1.0 references a GameView dropdown entry that no longer exists**
+**8. CHANGELOG 0.1.0 references a GameView dropdown entry that no longer exists**
 
 The 0.1.0 changelog says "Play Fullscreen option in the GameView play-mode dropdown (alongside Play Focused / Maximized / Unfocused)." The [Unreleased] section says "Removed: Edit > Fullscreen Play menu entries." The current code only exposes `Tools/Fullscreen Play` menu items plus shortcuts. If the GameView dropdown entry was intentionally removed, that's a discoverability regression worth considering. The GameView dropdown is where users most naturally look for play mode options.
 
-**13. Release workflow does not match DOCUMENTATION.md description**
+**9. Release workflow does not match DOCUMENTATION.md description**
 
 DOCUMENTATION.md says the workflow supports "version bump type selection (patch/minor/major)" via `workflow_dispatch`. The actual workflow has no inputs and always bumps minor. Minor also incorrectly rolls over to major at 9 (0.12.0 is valid semver). No support for patch-only or major-only bumps.
 
@@ -175,24 +153,20 @@ Features that paid/free alternatives offer and users commonly expect:
 
 ### Must Fix (correctness)
 
-1. Fix JSON parser `\uXXXX` decoding — active bug producing garbled text in both English and German
-2. Fix PackageUpdater to install tagged releases, not bare HEAD
-3. Fix CopyGameViewSettings to resolve the correct source GameView
-4. Add modifier key check to global F11 handler — prevent conflict with Ctrl+Shift+F11
-5. Use window title for orphan detection — replace position heuristic with `titleContent.text` matching
+1. PackageUpdater should install tagged releases, not bare HEAD
+2. Orphan detection should use window title instead of position heuristic (deferred — handling separately to avoid regression)
 
 ### Should Fix (quality)
 
-6. Update DOCUMENTATION.md — correct toast description, release workflow description
-7. Guard PackageUpdater against concurrent invocations
-8. Fix CHANGELOG.md — add proper version sections for 0.2.0 through 0.4.0
-9. Update README version pin example to current version
-10. Make toast keycap labels reflect actual shortcut bindings from the Shortcut Manager
-11. Add lightweight editor tests or a documented release smoke checklist
+3. Update DOCUMENTATION.md — correct toast description, release workflow description
+4. Fix CHANGELOG.md — add proper version sections for 0.2.0 through 0.4.0
+5. Update README version pin example to current version
+6. Make toast keycap labels reflect actual shortcut bindings from the Shortcut Manager
+7. Add lightweight editor tests or a documented release smoke checklist
 
 ### Feature Additions (competitiveness)
 
-12. Multi-monitor support (biggest competitive gap)
-13. Restore a GameView-local entry point (dropdown or overlay button)
-14. Allow fullscreen outside Play mode
-15. Auto-restore fullscreen after domain reload during Play mode
+8. Multi-monitor support (biggest competitive gap)
+9. Restore a GameView-local entry point (dropdown or overlay button)
+10. Allow fullscreen outside Play mode
+11. Auto-restore fullscreen after domain reload during Play mode
