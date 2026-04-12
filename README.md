@@ -42,7 +42,7 @@ Adds a **Play Fullscreen** toggle that launches the Game view as a borderless fu
 
 To pin a specific version, append a tag:
 ```
-https://github.com/Shilo/unity-fullscreen-play.git#v0.1.0
+https://github.com/Shilo/unity-fullscreen-play.git#v0.4.0
 ```
 
 ### Option B — Edit manifest.json

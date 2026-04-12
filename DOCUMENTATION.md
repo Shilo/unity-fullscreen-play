@@ -274,17 +274,17 @@ The `FullscreenPlaySettingsProvider` class implements a `SettingsProvider` regis
 
 #### 4. FullscreenToast.cs - Visual Feedback
 
-A small borderless popup (`EditorWindow` via `ShowPopup()`) that displays "Press Esc or F11 to exit fullscreen" at the top-center of the screen. It fades out after the configured duration.
+A `VisualElement` overlay attached to the fullscreen GameView's `rootVisualElement` that displays "Exit fullscreen [F11] [Esc]" at the top-center of the screen. It fades out after the configured duration.
 
 **Rendering (Material Design 3 flat dark theme):**
 - Dark surface background (`#1E1E24` at 95% opacity)
 - "Exit fullscreen" label followed by flat rounded keycap badges (`[F11]` `[Esc]`), horizontally centered
-- Keycaps: slightly elevated surface color, 6px rounded corners via SDF-generated anti-aliased 9-slice textures, no border or shadow
+- Keycaps: slightly elevated surface color, 6px rounded corners, no border or shadow
 - Fade: linear alpha reduction from 65% to 100% of duration
-- Non-interactive: no click handling, purely visual
+- Non-interactive: `pickingMode = PickingMode.Ignore` on all elements
 - Localized via `I18n.Tr("exit_fullscreen")`
 
-**Why a separate EditorWindow:** Since the fullscreen GameView is an internal Unity type, we cannot override its `OnGUI` to draw overlays. A separate popup window layered on top is the only clean approach. The toast is shown with a `delayCall` to ensure it appears above the fullscreen window, then focus is returned to the GameView so game input works.
+**Why a VisualElement overlay:** The toast is injected directly into the fullscreen GameView's visual tree via `window.rootVisualElement.Add()`. This avoids creating a separate native window, eliminates focus-stealing issues, and keeps the toast layered naturally above the game content without Win32 z-order management.
 
 #### 5. PackageUpdater.cs - Update Check
 
@@ -335,8 +335,6 @@ SetWindowPos(hwnd, HWND_TOP, x, y, w, h, SWP_SHOWWINDOW);
 ```
 
 `HWND_TOP` (not `HWND_TOPMOST`) is used deliberately. `HWND_TOPMOST` would pin the window above everything permanently, blocking alt-tab and other windows. `HWND_TOP` places it at the top of the z-order once — it covers the taskbar on initial show, but alt-tab works normally to bring other windows in front.
-
-The toast popup is separately brought to the top via `BringWindowToTop()` so it appears above the fullscreen GameView.
 
 This is wrapped in `#if UNITY_EDITOR_WIN` so it compiles cleanly on macOS/Linux, where `ShowPopup()` alone is sufficient.
 
@@ -408,13 +406,11 @@ The `[Shortcut]` attribute integrates with Unity's Shortcuts Manager, making F11
 
 Escape cannot use `[Shortcut]` because it would globally intercept Escape in all contexts, breaking games that use Escape for pause menus, etc. The `globalEventHandler` approach (via reflection on `EditorApplication`) lets us intercept Escape only when fullscreen is active and consume the event so the game never sees it.
 
-### Decision 5: Toast as Separate Window
+### Decision 5: Toast as VisualElement Overlay
 
-**Chose: Separate popup overlay.**
+**Chose: VisualElement overlay on the fullscreen GameView.**
 
-Since we cannot modify the internal GameView's rendering pipeline, a separate small popup window is the cleanest way to show overlay UI. The toast is deliberately positioned at the top-center (like browser fullscreen notifications) and auto-fades to avoid obstructing the game.
-
-Focus management is critical: after showing the toast, we immediately return focus to the GameView so game input works. The toast is non-interactive - it only displays information.
+The toast is injected into the fullscreen GameView's `rootVisualElement`, not rendered as a separate native window. This eliminates focus-stealing (no need to return focus to the GameView after showing the toast) and avoids platform-specific z-order management. The overlay is positioned at the top-center (like browser fullscreen notifications) and auto-fades to avoid obstructing the game. All elements use `pickingMode = PickingMode.Ignore` so the toast is non-interactive and never intercepts game input.
 
 ### Decision 6: UPM Package at Repo Root
 
@@ -483,8 +479,8 @@ The `showToolbar` property accessed via reflection is internal to Unity and may 
 
 The `release.yml` workflow automates version management:
 
-1. **Trigger**: Manual dispatch (`workflow_dispatch`) with version bump type selection (patch/minor/major)
-2. **Version bump**: Reads current version from `package.json`, increments the selected component, writes back
+1. **Trigger**: Manual dispatch (`workflow_dispatch`)
+2. **Version bump**: Reads current version from `package.json`, increments the minor version, resets patch to 0
 3. **Commit**: Creates a `chore: bump version to X.Y.Z` commit
 4. **Tag**: Creates a `vX.Y.Z` Git tag
 5. **Release**: Creates a GitHub Release with:
