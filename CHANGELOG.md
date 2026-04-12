@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PackageUpdater shows "Already up to date" when versions match
 - PackageUpdater rejects concurrent invocations
 
-## [0.4.0] - 2026-04-10
+## [0.4.0] - 2026-04-11
 
 ### Added
 
