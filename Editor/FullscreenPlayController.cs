@@ -74,10 +74,13 @@ namespace Shilo.FullscreenPlay.Editor
 
         /// <summary>
         /// Intercepts application-level quit shortcuts (Cmd+Q on macOS,
-        /// Ctrl+Q on Linux, File > Quit) while fullscreen is active.
+        /// Ctrl+Q on Linux, File > Quit) and Application.Quit() calls
+        /// while fullscreen is active.
         /// Exits fullscreen and cancels the quit so the editor stays open.
-        /// Note: Alt+F4 on Windows already closes just the popup window
-        /// (native Win32 behavior) and does not trigger this callback.
+        /// Does NOT stop play mode — matching Unity's native behavior where
+        /// Application.Quit() in the editor does not exit play mode.
+        /// Note: Alt+F4 on Windows and Cmd+W on macOS are intercepted
+        /// earlier in OnGlobalEvent and do not trigger this callback.
         /// </summary>
         private static bool OnWantsToQuit()
         {
@@ -236,14 +239,6 @@ namespace Shilo.FullscreenPlay.Editor
             var e = Event.current;
             if (e == null || e.type != EventType.KeyDown) return;
 
-            // Escape: exit fullscreen (only when fullscreen is active)
-            if (e.keyCode == KeyCode.Escape && FullscreenGameView.IsFullscreen)
-            {
-                FullscreenGameView.ExitFullscreen();
-                e.Use();
-                return;
-            }
-
             // F11: toggle fullscreen during play mode.
             // The [Shortcut] attribute doesn't fire when the fullscreen
             // GameView captures keyboard input, so we handle it here too.
@@ -256,7 +251,56 @@ namespace Shilo.FullscreenPlay.Editor
             {
                 FullscreenGameView.ToggleFullscreen();
                 e.Use();
+                return;
             }
+
+            if (!FullscreenGameView.IsFullscreen) return;
+
+            if (IsEscape(e))
+                FullscreenGameView.ExitFullscreen();
+            else if (IsQuit(e) || IsPlayToggle(e))
+                FullscreenGameView.ExitFullscreen(stopPlaying: true);
+            else
+                return;
+
+            e.Use();
+        }
+
+        /// <summary>Escape with no modifiers.</summary>
+        private static bool IsEscape(Event e)
+        {
+            return e.keyCode == KeyCode.Escape;
+        }
+
+        /// <summary>
+        /// Alt+F4 (Windows/Linux) or Cmd+W (macOS).
+        /// Intercepted here to prevent the OS from closing just the popup
+        /// while play mode continues running headless.
+        /// </summary>
+        private static bool IsQuit(Event e)
+        {
+            if (e.keyCode == KeyCode.F4 && e.alt
+                && !e.shift && !e.control && !e.command)
+                return true;
+
+            if (e.keyCode == KeyCode.W && e.command
+                && !e.shift && !e.control && !e.alt)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Ctrl+P (Windows/Linux) or Cmd+P (macOS).
+        /// Mirrors Unity's built-in Play toggle shortcut, which may not
+        /// reach the shortcut system when the fullscreen GameView captures
+        /// keyboard input.
+        /// </summary>
+        private static bool IsPlayToggle(Event e)
+        {
+            return e.keyCode == KeyCode.P
+                && (e.control || e.command)
+                && !e.shift && !e.alt;
         }
     }
 }

@@ -93,7 +93,7 @@ namespace Shilo.FullscreenPlay.Editor
             EditorApplication.focusChanged += OnAppFocusChanged;
         }
 
-        public static void ExitFullscreen()
+        public static void ExitFullscreen(bool stopPlaying = false)
         {
             if (!IsFullscreen) return;
 
@@ -112,6 +112,9 @@ namespace Shilo.FullscreenPlay.Editor
 
             s_FullscreenRect = Rect.zero;
             EditorPrefs.DeleteKey("FullscreenPlay.Active");
+
+            if (stopPlaying)
+                EditorApplication.isPlaying = false;
         }
 
         private static void OnAppFocusChanged(bool focused)
